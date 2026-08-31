@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_evaluate_loan_risk" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="5.49.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.9.0">
+  <decision id="evaluate-loan-risk" name="Evaluate Loan Risk">
+    <decisionTable id="DecisionTable_loan_risk" hitPolicy="UNIQUE">
+      <input id="Input_creditScore" label="Credit Score">
+        <inputExpression id="InputExpression_creditScore" typeRef="number">
+          <text>creditScore</text>
+        </inputExpression>
+      </input>
+      <input id="Input_loanAmount" label="Loan Amount">
+        <inputExpression id="InputExpression_loanAmount" typeRef="number">
+          <text>loanAmount</text>
+        </inputExpression>
+      </input>
+      <output id="Output_riskTier" label="Risk Tier" name="riskTier" typeRef="string" />
+      <output id="Output_requiresManualReview" label="Requires Manual Review" name="requiresManualReview" typeRef="boolean" />
+      <rule id="DecisionRule_1">
+        <description>creditScore &gt;= 750 and loanAmount &lt;= 50000 -> LOW, false</description>
+        <inputEntry id="UnaryTests_1_1">
+          <text>&gt;= 750</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1_2">
+          <text>&lt;= 50000</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1_1">
+          <text>&#34;LOW&#34;</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_1_2">
+          <text>false</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_2">
+        <description>creditScore &gt;= 750 and loanAmount &gt; 50000 -> MEDIUM, true</description>
+        <inputEntry id="UnaryTests_2_1">
+          <text>&gt;= 750</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_2_2">
+          <text>&gt; 50000</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_2_1">
+          <text>&#34;MEDIUM&#34;</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_2_2">
+          <text>true</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_3">
+        <description>creditScore between [600..749] -> MEDIUM, true</description>
+        <inputEntry id="UnaryTests_3_1">
+          <text>[600..749]</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_3_2">
+          <text>-</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_3_1">
+          <text>&#34;MEDIUM&#34;</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_3_2">
+          <text>true</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_4">
+        <description>creditScore &lt; 600 -> HIGH, false</description>
+        <inputEntry id="UnaryTests_4_1">
+          <text>&lt; 600</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_4_2">
+          <text>-</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_4_1">
+          <text>&#34;HIGH&#34;</text>
+        </outputEntry>
+        <outputEntry id="LiteralExpression_4_2">
+          <text>false</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="DMNDiagram_evaluate_loan_risk">
+      <dmndi:DMNShape id="DMNShape_evaluate_loan_risk" dmnElementRef="evaluate-loan-risk">
+        <dc:Bounds height="80" width="180" x="160" y="100" />
+      </dmndi:DMNShape>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</definitions>

@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_LoanRiskRouting" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.49.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.9.0">
+  <bpmn:process id="Process_LoanRiskRouting" name="Loan Application Risk Routing" isExecutable="true">
+    <bpmn:startEvent id="Event_LoanAppSubmitted" name="Loan Application Submitted">
+      <bpmn:outgoing>Flow_ToEvaluateRisk</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_ToEvaluateRisk" sourceRef="Event_LoanAppSubmitted" targetRef="Activity_EvaluateLoanRisk" />
+    <bpmn:businessRuleTask id="Activity_EvaluateLoanRisk" name="Evaluate Loan Risk" camunda:decisionRef="evaluate-loan-risk" camunda:resultVariable="loanRiskDecision" camunda:mapDecisionResult="singleResult">
+      <bpmn:extensionElements>
+        <zeebe:calledDecision decisionId="evaluate-loan-risk" resultVariable="loanRiskDecision" />
+        <zeebe:ioMapping>
+          <zeebe:output source="= loanRiskDecision.riskTier" target="riskTier" />
+          <zeebe:output source="= loanRiskDecision.requiresManualReview" target="requiresManualReview" />
+        </zeebe:ioMapping>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ToEvaluateRisk</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToGateway</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:sequenceFlow id="Flow_ToGateway" sourceRef="Activity_EvaluateLoanRisk" targetRef="Gateway_RiskEvaluation" />
+    <bpmn:exclusiveGateway id="Gateway_RiskEvaluation" name="Evaluate Risk Tier &amp; Manual Review">
+      <bpmn:incoming>Flow_ToGateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_AutoApprove</bpmn:outgoing>
+      <bpmn:outgoing>Flow_UnderwriterReview</bpmn:outgoing>
+      <bpmn:outgoing>Flow_AutoReject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_AutoApprove" name="riskTier == &#34;LOW&#34;" sourceRef="Gateway_RiskEvaluation" targetRef="Activity_AutoApproveAndDisburse">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= riskTier = "LOW"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_UnderwriterReview" name="riskTier == &#34;MEDIUM&#34; or requiresManualReview == true" sourceRef="Gateway_RiskEvaluation" targetRef="Activity_UnderwriterReview">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= riskTier = "MEDIUM" or requiresManualReview = true</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_AutoReject" name="riskTier == &#34;HIGH&#34; and requiresManualReview == false" sourceRef="Gateway_RiskEvaluation" targetRef="Activity_AutoRejectNotification">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= riskTier = "HIGH" and requiresManualReview = false</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="Activity_AutoApproveAndDisburse" name="Auto-Approve and Disburse">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="auto-approve-disburse" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_AutoApprove</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToApproveEnd</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_ToApproveEnd" sourceRef="Activity_AutoApproveAndDisburse" targetRef="Event_LoanApproved" />
+    <bpmn:endEvent id="Event_LoanApproved" name="End (Loan Auto-Approved &amp; Disbursed)">
+      <bpmn:incoming>Flow_ToApproveEnd</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Activity_UnderwriterReview" name="Underwriter Review">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_UnderwriterReview</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToReviewEnd</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_ToReviewEnd" sourceRef="Activity_UnderwriterReview" targetRef="Event_UnderwriterReviewed" />
+    <bpmn:endEvent id="Event_UnderwriterReviewed" name="End (Underwriter Review Completed)">
+      <bpmn:incoming>Flow_ToReviewEnd</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="Activity_AutoRejectNotification" name="Auto-Reject Notification">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="auto-reject-notification" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_AutoReject</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToRejectEnd</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_ToRejectEnd" sourceRef="Activity_AutoRejectNotification" targetRef="Event_LoanRejected" />
+    <bpmn:endEvent id="Event_LoanRejected" name="End (Loan Rejected)">
+      <bpmn:incoming>Flow_ToRejectEnd</bpmn:incoming>
+    </bpmn:endEvent>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_LoanRiskRouting">
+    <bpmndi:BPMNPlane id="BPMNPlane_LoanRiskRouting" bpmnElement="Process_LoanRiskRouting">
+      <bpmndi:BPMNShape id="Event_LoanAppSubmitted_di" bpmnElement="Event_LoanAppSubmitted">
+        <dc:Bounds x="179" y="182" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="156" y="225" width="83" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_EvaluateLoanRisk_di" bpmnElement="Activity_EvaluateLoanRisk">
+        <dc:Bounds x="270" y="160" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_RiskEvaluation_di" bpmnElement="Gateway_RiskEvaluation" isMarkerVisible="true">
+        <dc:Bounds x="425" y="175" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="485" y="186" width="86" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_AutoApproveAndDisburse_di" bpmnElement="Activity_AutoApproveAndDisburse">
+        <dc:Bounds x="550" y="60" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_LoanApproved_di" bpmnElement="Event_LoanApproved">
+        <dc:Bounds x="722" y="82" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="700" y="125" width="81" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_UnderwriterReview_di" bpmnElement="Activity_UnderwriterReview">
+        <dc:Bounds x="550" y="160" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_UnderwriterReviewed_di" bpmnElement="Event_UnderwriterReviewed">
+        <dc:Bounds x="722" y="182" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="697" y="225" width="87" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_AutoRejectNotification_di" bpmnElement="Activity_AutoRejectNotification">
+        <dc:Bounds x="550" y="260" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_LoanRejected_di" bpmnElement="Event_LoanRejected">
+        <dc:Bounds x="722" y="282" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="707" y="325" width="66" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_ToEvaluateRisk_di" bpmnElement="Flow_ToEvaluateRisk">
+        <di:waypoint x="215" y="200" />
+        <di:waypoint x="270" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToGateway_di" bpmnElement="Flow_ToGateway">
+        <di:waypoint x="370" y="200" />
+        <di:waypoint x="425" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AutoApprove_di" bpmnElement="Flow_AutoApprove">
+        <di:waypoint x="450" y="175" />
+        <di:waypoint x="450" y="100" />
+        <di:waypoint x="550" y="100" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="454" y="83" width="88" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_UnderwriterReview_di" bpmnElement="Flow_UnderwriterReview">
+        <di:waypoint x="475" y="200" />
+        <di:waypoint x="550" y="200" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="470" y="150" width="80" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AutoReject_di" bpmnElement="Flow_AutoReject">
+        <di:waypoint x="450" y="225" />
+        <di:waypoint x="450" y="300" />
+        <di:waypoint x="550" y="300" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="456" y="306" width="84" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToApproveEnd_di" bpmnElement="Flow_ToApproveEnd">
+        <di:waypoint x="650" y="100" />
+        <di:waypoint x="722" y="100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToReviewEnd_di" bpmnElement="Flow_ToReviewEnd">
+        <di:waypoint x="650" y="200" />
+        <di:waypoint x="722" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToRejectEnd_di" bpmnElement="Flow_ToRejectEnd">
+        <di:waypoint x="650" y="300" />
+        <di:waypoint x="722" y="300" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

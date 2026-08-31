@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_calculate_discounts" name="DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="5.49.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.9.0">
+  <decision id="calculate-discounts" name="Calculate Total Discount">
+    <decisionTable id="DecisionTable_discounts" hitPolicy="COLLECT" aggregation="SUM">
+      <input id="Input_customerTier" label="Customer Tier">
+        <inputExpression id="InputExpression_customerTier" typeRef="string">
+          <text>customerTier</text>
+        </inputExpression>
+      </input>
+      <input id="Input_cartValue" label="Cart Value">
+        <inputExpression id="InputExpression_cartValue" typeRef="number">
+          <text>cartValue</text>
+        </inputExpression>
+      </input>
+      <input id="Input_promoCode" label="Promo Code">
+        <inputExpression id="InputExpression_promoCode" typeRef="string">
+          <text>promoCode</text>
+        </inputExpression>
+      </input>
+      <output id="Output_discountPercent" label="Discount Percent" name="discountPercent" typeRef="number" />
+      <rule id="DecisionRule_PremiumTier">
+        <description>If customerTier == &#34;PREMIUM&#34; Add 10</description>
+        <inputEntry id="UnaryTests_Tier_Premium">
+          <text>&#34;PREMIUM&#34;</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_Cart_Any1">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_Promo_Any1">
+          <text>-</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_Discount_Premium">
+          <text>10</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_CartThreshold">
+        <description>If cartValue &gt;= 500 Add 5</description>
+        <inputEntry id="UnaryTests_Tier_Any2">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_Cart_Threshold">
+          <text>&gt;= 500</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_Promo_Any2">
+          <text>-</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_Discount_Cart">
+          <text>5</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_PromoSpecial">
+        <description>If promoCode in (&#34;FESTIVE10&#34;, &#34;SPECIAL10&#34;) Add 10</description>
+        <inputEntry id="UnaryTests_Tier_Any3">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_Cart_Any3">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_Promo_Special">
+          <text>&#34;FESTIVE10&#34;, &#34;SPECIAL10&#34;</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_Discount_Promo">
+          <text>10</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_Default">
+        <description>Default rule (matches all cases) Add 0</description>
+        <inputEntry id="UnaryTests_Tier_Default">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_Cart_Default">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_Promo_Default">
+          <text>-</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_Discount_Default">
+          <text>0</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="DMNDiagram_calculate_discounts">
+      <dmndi:DMNShape id="DMNShape_calculate_discounts" dmnElementRef="calculate-discounts">
+        <dc:Bounds height="80" width="180" x="160" y="100" />
+      </dmndi:DMNShape>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</definitions>

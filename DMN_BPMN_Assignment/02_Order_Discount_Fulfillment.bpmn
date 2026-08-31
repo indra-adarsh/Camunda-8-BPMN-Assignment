@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_OrderDiscountFulfillment" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.49.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.9.0">
+  <bpmn:process id="Process_OrderDiscountFulfillment" name="Multi-Item Order Discount &amp; Fulfillment Orchestration" isExecutable="true">
+    <bpmn:startEvent id="Event_OrderSubmitted" name="Order Submitted (customerTier, cartValue, promoCode)">
+      <bpmn:outgoing>Flow_ToCalculateDiscount</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_ToCalculateDiscount" sourceRef="Event_OrderSubmitted" targetRef="Activity_CalculateTotalDiscount" />
+    <bpmn:businessRuleTask id="Activity_CalculateTotalDiscount" name="Calculate Total Discount" camunda:decisionRef="calculate-discounts" camunda:resultVariable="totalDiscount" camunda:mapDecisionResult="singleEntry">
+      <bpmn:extensionElements>
+        <zeebe:calledDecision decisionId="calculate-discounts" resultVariable="totalDiscount" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ToCalculateDiscount</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToCalculateFinalAmount</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:sequenceFlow id="Flow_ToCalculateFinalAmount" sourceRef="Activity_CalculateTotalDiscount" targetRef="Activity_CalculateFinalAmount" />
+    <bpmn:scriptTask id="Activity_CalculateFinalAmount" name="Calculate Final Invoice Amount" scriptFormat="FEEL">
+      <bpmn:extensionElements>
+        <zeebe:script expression="= cartValue * (1 - (totalDiscount / 100))" resultVariable="finalAmount" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ToCalculateFinalAmount</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToGateway</bpmn:outgoing>
+      <bpmn:script>= cartValue * (1 - (totalDiscount / 100))</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sequenceFlow id="Flow_ToGateway" sourceRef="Activity_CalculateFinalAmount" targetRef="Gateway_InvoiceCheck" />
+    <bpmn:exclusiveGateway id="Gateway_InvoiceCheck" name="Is Final Amount &gt;= 1000?">
+      <bpmn:incoming>Flow_ToGateway</bpmn:incoming>
+      <bpmn:outgoing>Flow_ManagerSignOff</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ProceedDirectly</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_ManagerSignOff" name="finalAmount &gt;= 1000" sourceRef="Gateway_InvoiceCheck" targetRef="Activity_ManagerSignOff">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= finalAmount &gt;= 1000</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Flow_ProceedDirectly" name="finalAmount &lt; 1000" sourceRef="Gateway_InvoiceCheck" targetRef="Gateway_MergeOrderFlow">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= finalAmount &lt; 1000</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:userTask id="Activity_ManagerSignOff" name="Manager Sign-off">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ManagerSignOff</bpmn:incoming>
+      <bpmn:outgoing>Flow_FromManagerSignOff</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:sequenceFlow id="Flow_FromManagerSignOff" sourceRef="Activity_ManagerSignOff" targetRef="Gateway_MergeOrderFlow" />
+    <bpmn:exclusiveGateway id="Gateway_MergeOrderFlow" name="Merge Fulfillment Flow">
+      <bpmn:incoming>Flow_ProceedDirectly</bpmn:incoming>
+      <bpmn:incoming>Flow_FromManagerSignOff</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToSendToWarehouse</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_ToSendToWarehouse" sourceRef="Gateway_MergeOrderFlow" targetRef="Activity_SendOrderToWarehouse" />
+    <bpmn:serviceTask id="Activity_SendOrderToWarehouse" name="Send Order to Warehouse">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="send-order-warehouse" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ToSendToWarehouse</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToOrderEnd</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_ToOrderEnd" sourceRef="Activity_SendOrderToWarehouse" targetRef="Event_OrderCompleted" />
+    <bpmn:endEvent id="Event_OrderCompleted" name="End (Order Fulfilled &amp; Sent to Warehouse)">
+      <bpmn:incoming>Flow_ToOrderEnd</bpmn:incoming>
+    </bpmn:endEvent>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_OrderDiscountFulfillment">
+    <bpmndi:BPMNPlane id="BPMNPlane_OrderDiscountFulfillment" bpmnElement="Process_OrderDiscountFulfillment">
+      <bpmndi:BPMNShape id="Event_OrderSubmitted_di" bpmnElement="Event_OrderSubmitted">
+        <dc:Bounds x="179" y="162" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="157" y="205" width="81" height="53" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_CalculateTotalDiscount_di" bpmnElement="Activity_CalculateTotalDiscount">
+        <dc:Bounds x="270" y="140" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_CalculateFinalAmount_di" bpmnElement="Activity_CalculateFinalAmount">
+        <dc:Bounds x="430" y="140" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_InvoiceCheck_di" bpmnElement="Gateway_InvoiceCheck" isMarkerVisible="true">
+        <dc:Bounds x="595" y="155" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="581" y="212" width="79" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_ManagerSignOff_di" bpmnElement="Activity_ManagerSignOff">
+        <dc:Bounds x="700" y="50" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_MergeOrderFlow_di" bpmnElement="Gateway_MergeOrderFlow" isMarkerVisible="true">
+        <dc:Bounds x="855" y="155" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="836" y="212" width="89" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_SendOrderToWarehouse_di" bpmnElement="Activity_SendOrderToWarehouse">
+        <dc:Bounds x="960" y="140" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_OrderCompleted_di" bpmnElement="Event_OrderCompleted">
+        <dc:Bounds x="1122" y="162" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1098" y="205" width="84" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_ToCalculateDiscount_di" bpmnElement="Flow_ToCalculateDiscount">
+        <di:waypoint x="215" y="180" />
+        <di:waypoint x="270" y="180" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToCalculateFinalAmount_di" bpmnElement="Flow_ToCalculateFinalAmount">
+        <di:waypoint x="370" y="180" />
+        <di:waypoint x="430" y="180" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToGateway_di" bpmnElement="Flow_ToGateway">
+        <di:waypoint x="530" y="180" />
+        <di:waypoint x="595" y="180" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ManagerSignOff_di" bpmnElement="Flow_ManagerSignOff">
+        <di:waypoint x="620" y="155" />
+        <di:waypoint x="620" y="90" />
+        <di:waypoint x="700" y="90" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="626" y="73" width="68" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ProceedDirectly_di" bpmnElement="Flow_ProceedDirectly">
+        <di:waypoint x="645" y="180" />
+        <di:waypoint x="855" y="180" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="724" y="162" width="55" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_FromManagerSignOff_di" bpmnElement="Flow_FromManagerSignOff">
+        <di:waypoint x="800" y="90" />
+        <di:waypoint x="880" y="90" />
+        <di:waypoint x="880" y="155" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToSendToWarehouse_di" bpmnElement="Flow_ToSendToWarehouse">
+        <di:waypoint x="905" y="180" />
+        <di:waypoint x="960" y="180" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToOrderEnd_di" bpmnElement="Flow_ToOrderEnd">
+        <di:waypoint x="1060" y="180" />
+        <di:waypoint x="1122" y="180" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
