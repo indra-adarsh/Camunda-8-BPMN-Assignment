@@ -1,0 +1,1260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_LoanOrigination" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.49.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.9.0">
+  <bpmn:collaboration id="Collaboration_LoanOrigination">
+    <bpmn:participant id="Participant_CreditBureau" name="Credit Bureau (External Agency)" />
+    <bpmn:participant id="Participant_Bank" name="Bank Loan Origination &amp; Approval System" processRef="Process_LoanOrigination" />
+    <bpmn:messageFlow id="MsgFlow_RequestScore" name="Credit Score Request" sourceRef="Activity_RequestBureauScore" targetRef="Participant_CreditBureau" />
+    <bpmn:messageFlow id="MsgFlow_ReceiveScore" name="Credit Score Report" sourceRef="Participant_CreditBureau" targetRef="Activity_RequestBureauScore" />
+  </bpmn:collaboration>
+
+  <bpmn:process id="Process_LoanOrigination" name="Loan Origination &amp; Approval System" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_Bank">
+      <bpmn:lane id="Lane_Applicant" name="Applicant">
+        <bpmn:flowNodeRef>Event_Start_Application</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_UploadMissingDocs</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_Timer_DocMissing</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_End_Lapsed</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_ReviewCounterOffer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_CounterOfferAcceptance</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_End_CounterDeclined</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_AcceptOffer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_Timer_OfferExpiry</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_End_OfferExpired</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_ESignAgreement</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ESignAttempts</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_End_ESignCancelled</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_End_Withdrawn</bpmn:flowNodeRef>
+      </bpmn:lane>
+
+      <bpmn:lane id="Lane_LoanOfficer" name="Loan Officer">
+        <bpmn:flowNodeRef>Activity_ManualKYCResolution</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ManualKYCDecision</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_End_KYCRejected</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_ManualCreditCheck</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_VerifyIncome</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_PrepareCounterOffer</bpmn:flowNodeRef>
+      </bpmn:lane>
+
+      <bpmn:lane id="Lane_Underwriter" name="Underwriter / Credit Committee">
+        <bpmn:flowNodeRef>Activity_UnderwriterReview</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_AdditionalChecks</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_SeniorCommitteeApproval</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_JoinUnderwriting</bpmn:flowNodeRef>
+      </bpmn:lane>
+
+      <bpmn:lane id="Lane_Compliance" name="Fraud &amp; Compliance Team">
+        <bpmn:flowNodeRef>SubProcess_FraudInvestigation</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_End_TerminatedFraud</bpmn:flowNodeRef>
+      </bpmn:lane>
+
+      <bpmn:lane id="Lane_Operations" name="Operations / Disbursement">
+        <bpmn:flowNodeRef>Activity_CollateralValuation</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_CollateralOutcome</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_End_TitleRejected</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_DisburseFunds</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_Error_DisbursementFail</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_ResolveDisbursementIssue</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_Throw_CompensateAccount</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_End_DisbursementFailed</bpmn:flowNodeRef>
+      </bpmn:lane>
+
+      <bpmn:lane id="Lane_CoreBanking" name="Core Banking System">
+        <bpmn:flowNodeRef>Activity_CheckDocCompleteness</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_DocCompleteness</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_RequestMissingDocs</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ForkVerification</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_VerifyKYC</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_KYCResult</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_RequestBureauScore</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_Error_BureauAPI</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_BureauRetries</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_JoinVerification</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_FraudScreening</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_FraudOutcome</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_AssessEligibility</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_EligibilityOutcome</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_End_ScoreRejected</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_GenerateLoanOffer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_SendOffer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_CreateLoanAccount</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_Comp_Account</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_ReverseLoanAccount</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_NotifyDisbursement</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_End_LoanDisbursed</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <!-- Global Cancellation Boundary Event on Main Process (L10) -->
+    <bpmn:boundaryEvent id="Event_Message_Withdrawal" name="Applicant Cancellation / Withdrawal (L10)" attachedToRef="Activity_UnderwriterReview">
+      <bpmn:outgoing>Flow_Withdrawal_To_Comp</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDef_Withdraw" messageRef="Message_WithdrawLoan" />
+    </bpmn:boundaryEvent>
+    <bpmn:intermediateThrowEvent id="Event_Throw_WithdrawCompensation" name="Reverse Processing Fees &amp; Holds (L10)">
+      <bpmn:incoming>Flow_Withdrawal_To_Comp</bpmn:incoming>
+      <bpmn:outgoing>Flow_To_WithdrawnEnd</bpmn:outgoing>
+      <bpmn:compensateEventDefinition id="CompEventDef_Withdraw" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:endEvent id="Event_End_Withdrawn" name="End (Loan Withdrawn)">
+      <bpmn:incoming>Flow_To_WithdrawnEnd</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Applicant Lane Flow Nodes -->
+    <bpmn:startEvent id="Event_Start_Application" name="Loan Application &amp; Documents Submitted">
+      <bpmn:outgoing>Flow_Start_To_DocCheck</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDef_Start" messageRef="Message_ApplicationSubmitted" />
+    </bpmn:startEvent>
+    <bpmn:userTask id="Activity_UploadMissingDocs" name="Upload Missing Documents (L1)">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_To_UploadMissing</bpmn:incoming>
+      <bpmn:outgoing>Flow_ResubmitDocs_To_Check</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="Event_Timer_DocMissing" name="7-Day SLA Expired (L1)" attachedToRef="Activity_UploadMissingDocs">
+      <bpmn:outgoing>Flow_DocTimer_To_Lapse</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDef_MissingDoc">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">P7D</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:endEvent id="Event_End_Lapsed" name="End (Application Lapsed)">
+      <bpmn:incoming>Flow_DocTimer_To_Lapse</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Activity_ReviewCounterOffer" name="Review Counter-Offer / Guarantor Terms (L5, L6)">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_To_ReviewCounterOffer</bpmn:incoming>
+      <bpmn:outgoing>Flow_To_CounterDecision</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_CounterOfferAcceptance" name="Counter-Offer Accepted?">
+      <bpmn:incoming>Flow_To_CounterDecision</bpmn:incoming>
+      <bpmn:outgoing>Flow_Counter_Accepted</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Counter_Declined</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Event_End_CounterDeclined" name="End (Counter-Offer Declined)">
+      <bpmn:incoming>Flow_Counter_Declined</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Activity_AcceptOffer" name="Review &amp; Accept Loan Offer">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_SendOffer_To_Accept</bpmn:incoming>
+      <bpmn:outgoing>Flow_Accept_To_ESign</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="Event_Timer_OfferExpiry" name="15-Day Offer Validity Expired (L9)" attachedToRef="Activity_AcceptOffer">
+      <bpmn:outgoing>Flow_OfferExpired_To_End</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDef_OfferExpiry">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">P15D</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:endEvent id="Event_End_OfferExpired" name="End (Offer Expired)">
+      <bpmn:incoming>Flow_OfferExpired_To_End</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Activity_ESignAgreement" name="E-Sign Loan Agreement (L11)">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Accept_To_ESign</bpmn:incoming>
+      <bpmn:incoming>Flow_ESign_Retry</bpmn:incoming>
+      <bpmn:outgoing>Flow_ESign_To_AttemptCheck</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_ESignAttempts" name="Signature Valid &amp; Signed? (L11)">
+      <bpmn:incoming>Flow_ESign_To_AttemptCheck</bpmn:incoming>
+      <bpmn:outgoing>Flow_ESign_Success</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ESign_Retry</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ESign_Failed</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Event_End_ESignCancelled" name="End (Offer Cancelled - Signature Failed)">
+      <bpmn:incoming>Flow_ESign_Failed</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Loan Officer Flow Nodes -->
+    <bpmn:userTask id="Activity_ManualKYCResolution" name="Manual KYC Investigation &amp; Resolution (L2)">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_KYC_Mismatch</bpmn:incoming>
+      <bpmn:outgoing>Flow_To_ManualKYCDecision</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_ManualKYCDecision" name="KYC Resolved?">
+      <bpmn:incoming>Flow_To_ManualKYCDecision</bpmn:incoming>
+      <bpmn:outgoing>Flow_KYC_Resolved</bpmn:outgoing>
+      <bpmn:outgoing>Flow_KYC_Unresolved</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Event_End_KYCRejected" name="End (Rejected - KYC Mismatch)">
+      <bpmn:incoming>Flow_KYC_Unresolved</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Activity_ManualCreditCheck" name="Fallback Manual Credit Bureau Check (L4)">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Bureau_MaxRetries</bpmn:incoming>
+      <bpmn:outgoing>Flow_ManualBureau_To_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Activity_VerifyIncome" name="Income &amp; Employment Verification">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Fork_To_Income</bpmn:incoming>
+      <bpmn:outgoing>Flow_Income_To_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Activity_PrepareCounterOffer" name="Prepare Counter-Offer / Guarantor Request (L5, L6)">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Eligibility_Counter</bpmn:incoming>
+      <bpmn:outgoing>Flow_To_ReviewCounterOffer</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- Underwriter Flow Nodes -->
+    <bpmn:userTask id="Activity_UnderwriterReview" name="Underwriter Review &amp; Assessment">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Eligibility_Manual</bpmn:incoming>
+      <bpmn:outgoing>Flow_Underwriter_To_Checks</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:inclusiveGateway id="Gateway_AdditionalChecks" name="Determine Policy Checks Needed (L7, L8)">
+      <bpmn:incoming>Flow_Underwriter_To_Checks</bpmn:incoming>
+      <bpmn:outgoing>Flow_Checks_To_SeniorCommittee</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Checks_To_Collateral</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Checks_Standard</bpmn:outgoing>
+    </bpmn:inclusiveGateway>
+    <bpmn:userTask id="Activity_SeniorCommitteeApproval" name="Senior Credit Committee Approval (L7)">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Checks_To_SeniorCommittee</bpmn:incoming>
+      <bpmn:outgoing>Flow_Senior_To_Join</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:inclusiveGateway id="Gateway_JoinUnderwriting" name="Consolidate Underwriting Outcomes">
+      <bpmn:incoming>Flow_Senior_To_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_Collateral_Approved</bpmn:incoming>
+      <bpmn:incoming>Flow_Checks_Standard</bpmn:incoming>
+      <bpmn:outgoing>Flow_Underwriting_To_Offer</bpmn:outgoing>
+    </bpmn:inclusiveGateway>
+
+    <!-- Fraud & Compliance Flow Nodes -->
+    <bpmn:subProcess id="SubProcess_FraudInvestigation" name="Fraud &amp; AML Compliance Investigation (L3)">
+      <bpmn:incoming>Flow_Fraud_Hit</bpmn:incoming>
+      <bpmn:outgoing>Flow_Fraud_To_End</bpmn:outgoing>
+      <bpmn:startEvent id="SubEvent_FraudStart" name="Trigger Investigation">
+        <bpmn:outgoing>SubFlow_F1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:userTask id="Activity_AnalyzeFraudIndicators" name="Analyze Forged Docs &amp; Sanctions Hit">
+        <bpmn:extensionElements>
+          <zeebe:userTask />
+        </bpmn:extensionElements>
+        <bpmn:incoming>SubFlow_F1</bpmn:incoming>
+        <bpmn:outgoing>SubFlow_F2</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:serviceTask id="Activity_FileSARReport" name="File Regulatory SAR / AML Report">
+        <bpmn:extensionElements>
+          <zeebe:taskDefinition type="file-sar-report" />
+        </bpmn:extensionElements>
+        <bpmn:incoming>SubFlow_F2</bpmn:incoming>
+        <bpmn:outgoing>SubFlow_F3</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:endEvent id="SubEvent_FraudEnd" name="Investigation Logged">
+        <bpmn:incoming>SubFlow_F3</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="SubFlow_F1" sourceRef="SubEvent_FraudStart" targetRef="Activity_AnalyzeFraudIndicators" />
+      <bpmn:sequenceFlow id="SubFlow_F2" sourceRef="Activity_AnalyzeFraudIndicators" targetRef="Activity_FileSARReport" />
+      <bpmn:sequenceFlow id="SubFlow_F3" sourceRef="Activity_FileSARReport" targetRef="SubEvent_FraudEnd" />
+    </bpmn:subProcess>
+    <bpmn:endEvent id="Event_End_TerminatedFraud" name="Terminate (Fraud / AML Confirmed)">
+      <bpmn:incoming>Flow_Fraud_To_End</bpmn:incoming>
+      <bpmn:terminateEventDefinition id="TerminateEventDef_Fraud" />
+    </bpmn:endEvent>
+
+    <!-- Operations / Disbursement Flow Nodes -->
+    <bpmn:userTask id="Activity_CollateralValuation" name="Collateral Valuation &amp; Title Verification (L8)">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Checks_To_Collateral</bpmn:incoming>
+      <bpmn:outgoing>Flow_To_CollateralOutcome</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_CollateralOutcome" name="Title &amp; Valuation Valid? (L8)">
+      <bpmn:incoming>Flow_To_CollateralOutcome</bpmn:incoming>
+      <bpmn:outgoing>Flow_Collateral_Approved</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Collateral_TitleIssue</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Event_End_TitleRejected" name="End (Rejected - Title Issues)">
+      <bpmn:incoming>Flow_Collateral_TitleIssue</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <bpmn:serviceTask id="Activity_DisburseFunds" name="Verify Account &amp; Transfer Funds (L12)">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="disburse-funds-transfer" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_AccountCreated_To_Disburse</bpmn:incoming>
+      <bpmn:incoming>Flow_Disbursement_Retry</bpmn:incoming>
+      <bpmn:outgoing>Flow_Disburse_To_Notify</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="Event_Error_DisbursementFail" name="Payment Gateway / Account Error (L12)" attachedToRef="Activity_DisburseFunds">
+      <bpmn:outgoing>Flow_To_ResolveDisbursement</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDef_Disburse" errorRef="Error_PaymentGateway" />
+    </bpmn:boundaryEvent>
+    <bpmn:userTask id="Activity_ResolveDisbursementIssue" name="Resolve Account Discrepancy &amp; Hold Funds (L12)">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_To_ResolveDisbursement</bpmn:incoming>
+      <bpmn:outgoing>Flow_To_DisburseRetryDecision</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_DisburseRetryDecision" name="Account Verified?">
+      <bpmn:incoming>Flow_To_DisburseRetryDecision</bpmn:incoming>
+      <bpmn:outgoing>Flow_Disbursement_Retry</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Disbursement_FailFinal</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:intermediateThrowEvent id="Event_Throw_CompensateAccount" name="Reverse Loan Account Creation (L12)">
+      <bpmn:incoming>Flow_Disbursement_FailFinal</bpmn:incoming>
+      <bpmn:outgoing>Flow_To_DisbursementFailEnd</bpmn:outgoing>
+      <bpmn:compensateEventDefinition id="CompEventDef_Account" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:endEvent id="Event_End_DisbursementFailed" name="End (Disbursement Failed)">
+      <bpmn:incoming>Flow_To_DisbursementFailEnd</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Core Banking System Flow Nodes -->
+    <bpmn:businessRuleTask id="Activity_CheckDocCompleteness" name="Check Document Completeness (L1)">
+      <bpmn:extensionElements>
+        <zeebe:calledDecision decisionId="check-doc-completeness" resultVariable="docCompletenessResult" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Start_To_DocCheck</bpmn:incoming>
+      <bpmn:incoming>Flow_ResubmitDocs_To_Check</bpmn:incoming>
+      <bpmn:outgoing>Flow_To_DocCompleteness</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:exclusiveGateway id="Gateway_DocCompleteness" name="Documents Complete?">
+      <bpmn:incoming>Flow_To_DocCompleteness</bpmn:incoming>
+      <bpmn:outgoing>Flow_Docs_Complete</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Docs_Incomplete</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Activity_RequestMissingDocs" name="Generate Missing Items List &amp; Set 7-Day Timer (L1)">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="request-missing-docs" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Docs_Incomplete</bpmn:incoming>
+      <bpmn:outgoing>Flow_To_UploadMissing</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:parallelGateway id="Gateway_ForkVerification" name="Initiate Concurrent Verifications">
+      <bpmn:incoming>Flow_Docs_Complete</bpmn:incoming>
+      <bpmn:outgoing>Flow_Fork_To_KYC</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Fork_To_Bureau</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Fork_To_Income</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:serviceTask id="Activity_VerifyKYC" name="Automated KYC Identity Verification (L2)">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="automated-kyc-check" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Fork_To_KYC</bpmn:incoming>
+      <bpmn:outgoing>Flow_To_KYCResult</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_KYCResult" name="KYC Identity Matched?">
+      <bpmn:incoming>Flow_To_KYCResult</bpmn:incoming>
+      <bpmn:outgoing>Flow_KYC_Matched</bpmn:outgoing>
+      <bpmn:outgoing>Flow_KYC_Mismatch</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Activity_RequestBureauScore" name="Retrieve Credit Bureau Score (L4)">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="retrieve-bureau-score" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Fork_To_Bureau</bpmn:incoming>
+      <bpmn:incoming>Flow_Bureau_Retry</bpmn:incoming>
+      <bpmn:outgoing>Flow_Bureau_Success</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="Event_Error_BureauAPI" name="Bureau API Timeout / Error (L4)" attachedToRef="Activity_RequestBureauScore">
+      <bpmn:outgoing>Flow_To_BureauRetries</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDef_Bureau" errorRef="Error_BureauDown" />
+    </bpmn:boundaryEvent>
+    <bpmn:exclusiveGateway id="Gateway_BureauRetries" name="API Retries &lt; 3?">
+      <bpmn:incoming>Flow_To_BureauRetries</bpmn:incoming>
+      <bpmn:outgoing>Flow_Bureau_Retry</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Bureau_MaxRetries</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:parallelGateway id="Gateway_JoinVerification" name="Synchronize All Verifications">
+      <bpmn:incoming>Flow_KYC_Matched</bpmn:incoming>
+      <bpmn:incoming>Flow_KYC_Resolved</bpmn:incoming>
+      <bpmn:incoming>Flow_Bureau_Success</bpmn:incoming>
+      <bpmn:incoming>Flow_ManualBureau_To_Join</bpmn:incoming>
+      <bpmn:incoming>Flow_Income_To_Join</bpmn:incoming>
+      <bpmn:outgoing>Flow_Join_To_Fraud</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:businessRuleTask id="Activity_FraudScreening" name="Automated Fraud &amp; AML Screening (L3)">
+      <bpmn:extensionElements>
+        <zeebe:calledDecision decisionId="screen-fraud-aml" resultVariable="fraudScreeningResult" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Join_To_Fraud</bpmn:incoming>
+      <bpmn:outgoing>Flow_To_FraudOutcome</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:exclusiveGateway id="Gateway_FraudOutcome" name="Fraud / Sanctions Hit?">
+      <bpmn:incoming>Flow_To_FraudOutcome</bpmn:incoming>
+      <bpmn:outgoing>Flow_Fraud_Clean</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Fraud_Hit</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:businessRuleTask id="Activity_AssessEligibility" name="Eligibility &amp; Risk Scoring Engine (L5, L6)">
+      <bpmn:extensionElements>
+        <zeebe:calledDecision decisionId="assess-loan-eligibility" resultVariable="eligibilityResult" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Fraud_Clean</bpmn:incoming>
+      <bpmn:incoming>Flow_Counter_Accepted</bpmn:incoming>
+      <bpmn:outgoing>Flow_To_EligibilityOutcome</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:exclusiveGateway id="Gateway_EligibilityOutcome" name="Scoring Outcome?">
+      <bpmn:incoming>Flow_To_EligibilityOutcome</bpmn:incoming>
+      <bpmn:outgoing>Flow_Eligibility_AutoApprove</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Eligibility_Manual</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Eligibility_Counter</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Eligibility_Reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Event_End_ScoreRejected" name="End (Rejected - Low Credit Score)">
+      <bpmn:incoming>Flow_Eligibility_Reject</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:scriptTask id="Activity_GenerateLoanOffer" name="Generate Formal Loan Offer" scriptFormat="FEEL">
+      <bpmn:extensionElements>
+        <zeebe:script expression="= {loanId: application.id, approvedAmount: approvedAmount, interestRate: interestRate}" resultVariable="loanOffer" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Eligibility_AutoApprove</bpmn:incoming>
+      <bpmn:incoming>Flow_Underwriting_To_Offer</bpmn:incoming>
+      <bpmn:outgoing>Flow_Offer_To_Send</bpmn:outgoing>
+      <bpmn:script>= {loanId: application.id, approvedAmount: approvedAmount, interestRate: interestRate}</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:sendTask id="Activity_SendOffer" name="Send Loan Offer to Applicant">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="send-loan-offer" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Offer_To_Send</bpmn:incoming>
+      <bpmn:outgoing>Flow_SendOffer_To_Accept</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:serviceTask id="Activity_CreateLoanAccount" name="Create Loan Account in Core Banking">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="create-loan-account" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_ESSign_Success</bpmn:incoming>
+      <bpmn:outgoing>Flow_AccountCreated_To_Disburse</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:boundaryEvent id="Event_Comp_Account" name="Compensate Loan Account" attachedToRef="Activity_CreateLoanAccount">
+      <bpmn:compensateEventDefinition id="CompEventDef_Acc" />
+    </bpmn:boundaryEvent>
+    <bpmn:serviceTask id="Activity_ReverseLoanAccount" name="Reverse Loan Account Creation (L12)" isForCompensation="true">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="reverse-loan-account" />
+      </bpmn:extensionElements>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="Activity_NotifyDisbursement" name="Send Disbursement Notification &amp; Welcome Kit">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="notify-disbursement" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Disburse_To_Notify</bpmn:incoming>
+      <bpmn:outgoing>Flow_Notify_To_DisbursedEnd</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Event_End_LoanDisbursed" name="End (Loan Successfully Disbursed)">
+      <bpmn:incoming>Flow_Notify_To_DisbursedEnd</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Main Process Sequence Flows -->
+    <bpmn:sequenceFlow id="Flow_Start_To_DocCheck" sourceRef="Event_Start_Application" targetRef="Activity_CheckDocCompleteness" />
+    <bpmn:sequenceFlow id="Flow_To_DocCompleteness" sourceRef="Activity_CheckDocCompleteness" targetRef="Gateway_DocCompleteness" />
+    <bpmn:sequenceFlow id="Flow_Docs_Complete" name="Complete" sourceRef="Gateway_DocCompleteness" targetRef="Gateway_ForkVerification" />
+    <bpmn:sequenceFlow id="Flow_Docs_Incomplete" name="Incomplete (L1)" sourceRef="Gateway_DocCompleteness" targetRef="Activity_RequestMissingDocs" />
+    <bpmn:sequenceFlow id="Flow_To_UploadMissing" sourceRef="Activity_RequestMissingDocs" targetRef="Activity_UploadMissingDocs" />
+    <bpmn:sequenceFlow id="Flow_ResubmitDocs_To_Check" sourceRef="Activity_UploadMissingDocs" targetRef="Activity_CheckDocCompleteness" />
+    <bpmn:sequenceFlow id="Flow_DocTimer_To_Lapse" sourceRef="Event_Timer_DocMissing" targetRef="Event_End_Lapsed" />
+
+    <bpmn:sequenceFlow id="Flow_Fork_To_KYC" sourceRef="Gateway_ForkVerification" targetRef="Activity_VerifyKYC" />
+    <bpmn:sequenceFlow id="Flow_To_KYCResult" sourceRef="Activity_VerifyKYC" targetRef="Gateway_KYCResult" />
+    <bpmn:sequenceFlow id="Flow_KYC_Matched" name="KYC Match" sourceRef="Gateway_KYCResult" targetRef="Gateway_JoinVerification" />
+    <bpmn:sequenceFlow id="Flow_KYC_Mismatch" name="Mismatch (L2)" sourceRef="Gateway_KYCResult" targetRef="Activity_ManualKYCResolution" />
+    <bpmn:sequenceFlow id="Flow_To_ManualKYCDecision" sourceRef="Activity_ManualKYCResolution" targetRef="Gateway_ManualKYCDecision" />
+    <bpmn:sequenceFlow id="Flow_KYC_Resolved" name="Resolved" sourceRef="Gateway_ManualKYCDecision" targetRef="Gateway_JoinVerification" />
+    <bpmn:sequenceFlow id="Flow_KYC_Unresolved" name="Unresolved" sourceRef="Gateway_ManualKYCDecision" targetRef="Event_End_KYCRejected" />
+
+    <bpmn:sequenceFlow id="Flow_Fork_To_Bureau" sourceRef="Gateway_ForkVerification" targetRef="Activity_RequestBureauScore" />
+    <bpmn:sequenceFlow id="Flow_Bureau_Success" name="Score Received" sourceRef="Activity_RequestBureauScore" targetRef="Gateway_JoinVerification" />
+    <bpmn:sequenceFlow id="Flow_To_BureauRetries" sourceRef="Event_Error_BureauAPI" targetRef="Gateway_BureauRetries" />
+    <bpmn:sequenceFlow id="Flow_Bureau_Retry" name="Retry &lt; 3" sourceRef="Gateway_BureauRetries" targetRef="Activity_RequestBureauScore" />
+    <bpmn:sequenceFlow id="Flow_Bureau_MaxRetries" name="Max Retries (L4)" sourceRef="Gateway_BureauRetries" targetRef="Activity_ManualCreditCheck" />
+    <bpmn:sequenceFlow id="Flow_ManualBureau_To_Join" sourceRef="Activity_ManualCreditCheck" targetRef="Gateway_JoinVerification" />
+
+    <bpmn:sequenceFlow id="Flow_Fork_To_Income" sourceRef="Gateway_ForkVerification" targetRef="Activity_VerifyIncome" />
+    <bpmn:sequenceFlow id="Flow_Income_To_Join" sourceRef="Activity_VerifyIncome" targetRef="Gateway_JoinVerification" />
+
+    <bpmn:sequenceFlow id="Flow_Join_To_Fraud" sourceRef="Gateway_JoinVerification" targetRef="Activity_FraudScreening" />
+    <bpmn:sequenceFlow id="Flow_To_FraudOutcome" sourceRef="Activity_FraudScreening" targetRef="Gateway_FraudOutcome" />
+    <bpmn:sequenceFlow id="Flow_Fraud_Clean" name="No Flag" sourceRef="Gateway_FraudOutcome" targetRef="Activity_AssessEligibility" />
+    <bpmn:sequenceFlow id="Flow_Fraud_Hit" name="Sanctions / AML Hit (L3)" sourceRef="Gateway_FraudOutcome" targetRef="SubProcess_FraudInvestigation" />
+    <bpmn:sequenceFlow id="Flow_Fraud_To_End" sourceRef="SubProcess_FraudInvestigation" targetRef="Event_End_TerminatedFraud" />
+
+    <bpmn:sequenceFlow id="Flow_To_EligibilityOutcome" sourceRef="Activity_AssessEligibility" targetRef="Gateway_EligibilityOutcome" />
+    <bpmn:sequenceFlow id="Flow_Eligibility_AutoApprove" name="Auto-Approve" sourceRef="Gateway_EligibilityOutcome" targetRef="Activity_GenerateLoanOffer" />
+    <bpmn:sequenceFlow id="Flow_Eligibility_Manual" name="Manual Review" sourceRef="Gateway_EligibilityOutcome" targetRef="Activity_UnderwriterReview" />
+    <bpmn:sequenceFlow id="Flow_Eligibility_Counter" name="Counter-Offer (L5, L6)" sourceRef="Gateway_EligibilityOutcome" targetRef="Activity_PrepareCounterOffer" />
+    <bpmn:sequenceFlow id="Flow_Eligibility_Reject" name="Reject Score" sourceRef="Gateway_EligibilityOutcome" targetRef="Event_End_ScoreRejected" />
+
+    <bpmn:sequenceFlow id="Flow_To_ReviewCounterOffer" sourceRef="Activity_PrepareCounterOffer" targetRef="Activity_ReviewCounterOffer" />
+    <bpmn:sequenceFlow id="Flow_To_CounterDecision" sourceRef="Activity_ReviewCounterOffer" targetRef="Gateway_CounterOfferAcceptance" />
+    <bpmn:sequenceFlow id="Flow_Counter_Accepted" name="Accepted" sourceRef="Gateway_CounterOfferAcceptance" targetRef="Activity_AssessEligibility" />
+    <bpmn:sequenceFlow id="Flow_Counter_Declined" name="Declined" sourceRef="Gateway_CounterOfferAcceptance" targetRef="Event_End_CounterDeclined" />
+
+    <bpmn:sequenceFlow id="Flow_Underwriter_To_Checks" sourceRef="Activity_UnderwriterReview" targetRef="Gateway_AdditionalChecks" />
+    <bpmn:sequenceFlow id="Flow_Checks_To_SeniorCommittee" name="Senior Committee (L7)" sourceRef="Gateway_AdditionalChecks" targetRef="Activity_SeniorCommitteeApproval" />
+    <bpmn:sequenceFlow id="Flow_Checks_To_Collateral" name="Secured Loan (L8)" sourceRef="Gateway_AdditionalChecks" targetRef="Activity_CollateralValuation" />
+    <bpmn:sequenceFlow id="Flow_Checks_Standard" name="Standard" sourceRef="Gateway_AdditionalChecks" targetRef="Gateway_JoinUnderwriting" />
+    <bpmn:sequenceFlow id="Flow_Senior_To_Join" sourceRef="Activity_SeniorCommitteeApproval" targetRef="Gateway_JoinUnderwriting" />
+    <bpmn:sequenceFlow id="Flow_To_CollateralOutcome" sourceRef="Activity_CollateralValuation" targetRef="Gateway_CollateralOutcome" />
+    <bpmn:sequenceFlow id="Flow_Collateral_Approved" name="Valuation Approved" sourceRef="Gateway_CollateralOutcome" targetRef="Gateway_JoinUnderwriting" />
+    <bpmn:sequenceFlow id="Flow_Collateral_TitleIssue" name="Title Issues (Reject)" sourceRef="Gateway_CollateralOutcome" targetRef="Event_End_TitleRejected" />
+    <bpmn:sequenceFlow id="Flow_Underwriting_To_Offer" sourceRef="Gateway_JoinUnderwriting" targetRef="Activity_GenerateLoanOffer" />
+
+    <bpmn:sequenceFlow id="Flow_Offer_To_Send" sourceRef="Activity_GenerateLoanOffer" targetRef="Activity_SendOffer" />
+    <bpmn:sequenceFlow id="Flow_SendOffer_To_Accept" sourceRef="Activity_SendOffer" targetRef="Activity_AcceptOffer" />
+    <bpmn:sequenceFlow id="Flow_OfferExpired_To_End" sourceRef="Event_Timer_OfferExpiry" targetRef="Event_End_OfferExpired" />
+    <bpmn:sequenceFlow id="Flow_Accept_To_ESign" sourceRef="Activity_AcceptOffer" targetRef="Activity_ESignAgreement" />
+
+    <bpmn:sequenceFlow id="Flow_ESign_To_AttemptCheck" sourceRef="Activity_ESignAgreement" targetRef="Gateway_ESignAttempts" />
+    <bpmn:sequenceFlow id="Flow_ESSign_Success" name="Signed" sourceRef="Gateway_ESignAttempts" targetRef="Activity_CreateLoanAccount" />
+    <bpmn:sequenceFlow id="Flow_ESign_Retry" name="Resend &amp; Remind (Max 2)" sourceRef="Gateway_ESignAttempts" targetRef="Activity_ESignAgreement" />
+    <bpmn:sequenceFlow id="Flow_ESign_Failed" name="Failed &gt; 2 (L11)" sourceRef="Gateway_ESignAttempts" targetRef="Event_End_ESignCancelled" />
+
+    <bpmn:sequenceFlow id="Flow_AccountCreated_To_Disburse" sourceRef="Activity_CreateLoanAccount" targetRef="Activity_DisburseFunds" />
+    <bpmn:sequenceFlow id="Flow_Disburse_To_Notify" sourceRef="Activity_DisburseFunds" targetRef="Activity_NotifyDisbursement" />
+    <bpmn:sequenceFlow id="Flow_Notify_To_DisbursedEnd" sourceRef="Activity_NotifyDisbursement" targetRef="Event_End_LoanDisbursed" />
+
+    <bpmn:sequenceFlow id="Flow_To_ResolveDisbursement" sourceRef="Event_Error_DisbursementFail" targetRef="Activity_ResolveDisbursementIssue" />
+    <bpmn:sequenceFlow id="Flow_To_DisburseRetryDecision" sourceRef="Activity_ResolveDisbursementIssue" targetRef="Gateway_DisburseRetryDecision" />
+    <bpmn:sequenceFlow id="Flow_Disbursement_Retry" name="Retry Verified" sourceRef="Gateway_DisburseRetryDecision" targetRef="Activity_DisburseFunds" />
+    <bpmn:sequenceFlow id="Flow_Disbursement_FailFinal" name="Unresolved (L12)" sourceRef="Gateway_DisburseRetryDecision" targetRef="Event_Throw_CompensateAccount" />
+    <bpmn:sequenceFlow id="Flow_To_DisbursementFailEnd" sourceRef="Event_Throw_CompensateAccount" targetRef="Event_End_DisbursementFailed" />
+
+    <bpmn:sequenceFlow id="Flow_Withdrawal_To_Comp" sourceRef="Event_Message_Withdrawal" targetRef="Event_Throw_WithdrawCompensation" />
+    <bpmn:sequenceFlow id="Flow_To_WithdrawnEnd" sourceRef="Event_Throw_WithdrawCompensation" targetRef="Event_End_Withdrawn" />
+  </bpmn:process>
+
+  <bpmn:error id="Error_BureauDown" name="Error_BureauDown" errorCode="ERR_BUREAU_DOWN" />
+  <bpmn:error id="Error_PaymentGateway" name="Error_PaymentGateway" errorCode="ERR_PAYMENT_GATEWAY" />
+  <bpmn:message id="Message_ApplicationSubmitted" name="Message_ApplicationSubmitted" />
+  <bpmn:message id="Message_WithdrawLoan" name="Message_WithdrawLoan" />
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_LoanOrigination">
+    <bpmndi:BPMNPlane id="BPMNPlane_LoanOrigination" bpmnElement="Collaboration_LoanOrigination">
+      <!-- External Credit Bureau Pool -->
+      <bpmndi:BPMNShape id="Participant_CreditBureau_di" bpmnElement="Participant_CreditBureau" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="2450" height="70" />
+      </bpmndi:BPMNShape>
+
+      <!-- Main Bank Pool -->
+      <bpmndi:BPMNShape id="Participant_Bank_di" bpmnElement="Participant_Bank" isHorizontal="true">
+        <dc:Bounds x="160" y="190" width="2450" height="1350" />
+      </bpmndi:BPMNShape>
+
+      <!-- Lanes inside Bank Pool -->
+      <bpmndi:BPMNShape id="Lane_Applicant_di" bpmnElement="Lane_Applicant" isHorizontal="true">
+        <dc:Bounds x="190" y="190" width="2420" height="220" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_LoanOfficer_di" bpmnElement="Lane_LoanOfficer" isHorizontal="true">
+        <dc:Bounds x="190" y="410" width="2420" height="220" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Underwriter_di" bpmnElement="Lane_Underwriter" isHorizontal="true">
+        <dc:Bounds x="190" y="630" width="2420" height="220" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Compliance_di" bpmnElement="Lane_Compliance" isHorizontal="true">
+        <dc:Bounds x="190" y="850" width="2420" height="220" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Operations_di" bpmnElement="Lane_Operations" isHorizontal="true">
+        <dc:Bounds x="190" y="1070" width="2420" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_CoreBanking_di" bpmnElement="Lane_CoreBanking" isHorizontal="true">
+        <dc:Bounds x="190" y="1300" width="2420" height="240" />
+      </bpmndi:BPMNShape>
+
+      <!-- Lane: Applicant Shapes -->
+      <bpmndi:BPMNShape id="Event_Start_Application_di" bpmnElement="Event_Start_Application">
+        <dc:Bounds x="232" y="272" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="207" y="315" width="87" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_UploadMissingDocs_di" bpmnElement="Activity_UploadMissingDocs">
+        <dc:Bounds x="360" y="250" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Timer_DocMissing_di" bpmnElement="Event_Timer_DocMissing">
+        <dc:Bounds x="442" y="312" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="468" y="328" width="85" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_End_Lapsed_di" bpmnElement="Event_End_Lapsed">
+        <dc:Bounds x="532" y="312" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="517" y="355" width="67" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_ReviewCounterOffer_di" bpmnElement="Activity_ReviewCounterOffer">
+        <dc:Bounds x="1420" y="250" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_CounterOfferAcceptance_di" bpmnElement="Gateway_CounterOfferAcceptance" isMarkerVisible="true">
+        <dc:Bounds x="1575" y="265" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1568" y="322" width="65" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_End_CounterDeclined_di" bpmnElement="Event_End_CounterDeclined">
+        <dc:Bounds x="1662" y="272" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1646" y="315" width="68" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_AcceptOffer_di" bpmnElement="Activity_AcceptOffer">
+        <dc:Bounds x="1890" y="250" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Timer_OfferExpiry_di" bpmnElement="Event_Timer_OfferExpiry">
+        <dc:Bounds x="1972" y="312" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1998" y="328" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_End_OfferExpired_di" bpmnElement="Event_End_OfferExpired">
+        <dc:Bounds x="2062" y="312" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2046" y="355" width="68" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_ESignAgreement_di" bpmnElement="Activity_ESignAgreement">
+        <dc:Bounds x="2050" y="250" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ESignAttempts_di" bpmnElement="Gateway_ESignAttempts" isMarkerVisible="true">
+        <dc:Bounds x="2205" y="265" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2191" y="228" width="79" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_End_ESignCancelled_di" bpmnElement="Event_End_ESignCancelled">
+        <dc:Bounds x="2302" y="272" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2281" y="315" width="79" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_End_Withdrawn_di" bpmnElement="Event_End_Withdrawn">
+        <dc:Bounds x="1802" y="212" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1787" y="255" width="67" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Lane: Loan Officer Shapes -->
+      <bpmndi:BPMNShape id="Activity_ManualKYCResolution_di" bpmnElement="Activity_ManualKYCResolution">
+        <dc:Bounds x="640" y="470" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ManualKYCDecision_di" bpmnElement="Gateway_ManualKYCDecision" isMarkerVisible="true">
+        <dc:Bounds x="795" y="485" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="781" y="542" width="78" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_End_KYCRejected_di" bpmnElement="Event_End_KYCRejected">
+        <dc:Bounds x="892" y="492" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="876" y="535" width="68" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_ManualCreditCheck_di" bpmnElement="Activity_ManualCreditCheck">
+        <dc:Bounds x="840" y="470" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_VerifyIncome_di" bpmnElement="Activity_VerifyIncome">
+        <dc:Bounds x="740" y="550" width="120" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_PrepareCounterOffer_di" bpmnElement="Activity_PrepareCounterOffer">
+        <dc:Bounds x="1420" y="470" width="120" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- Lane: Underwriter Shapes -->
+      <bpmndi:BPMNShape id="Activity_UnderwriterReview_di" bpmnElement="Activity_UnderwriterReview">
+        <dc:Bounds x="1420" y="700" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Message_Withdrawal_di" bpmnElement="Event_Message_Withdrawal">
+        <dc:Bounds x="1502" y="682" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1538" y="660" width="86" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Throw_WithdrawCompensation_di" bpmnElement="Event_Throw_WithdrawCompensation">
+        <dc:Bounds x="1662" y="652" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1638" y="695" width="85" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_AdditionalChecks_di" bpmnElement="Gateway_AdditionalChecks">
+        <dc:Bounds x="1575" y="715" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1559" y="772" width="83" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_SeniorCommitteeApproval_di" bpmnElement="Activity_SeniorCommitteeApproval">
+        <dc:Bounds x="1670" y="700" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_JoinUnderwriting_di" bpmnElement="Gateway_JoinUnderwriting">
+        <dc:Bounds x="1835" y="715" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1827" y="772" width="67" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Lane: Compliance Shapes -->
+      <bpmndi:BPMNShape id="SubProcess_FraudInvestigation_di" bpmnElement="SubProcess_FraudInvestigation" isExpanded="true">
+        <dc:Bounds x="1080" y="890" width="380" height="150" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SubEvent_FraudStart_di" bpmnElement="SubEvent_FraudStart">
+        <dc:Bounds x="1102" y="942" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_AnalyzeFraudIndicators_di" bpmnElement="Activity_AnalyzeFraudIndicators">
+        <dc:Bounds x="1160" y="925" width="110" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_FileSARReport_di" bpmnElement="Activity_FileSARReport">
+        <dc:Bounds x="1290" y="925" width="100" height="70" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SubEvent_FraudEnd_di" bpmnElement="SubEvent_FraudEnd">
+        <dc:Bounds x="1412" y="942" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_End_TerminatedFraud_di" bpmnElement="Event_End_TerminatedFraud">
+        <dc:Bounds x="1502" y="947" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1478" y="990" width="85" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Lane: Operations Shapes -->
+      <bpmndi:BPMNShape id="Activity_CollateralValuation_di" bpmnElement="Activity_CollateralValuation">
+        <dc:Bounds x="1620" y="1120" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_CollateralOutcome_di" bpmnElement="Gateway_CollateralOutcome" isMarkerVisible="true">
+        <dc:Bounds x="1775" y="1135" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1760" y="1192" width="80" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_End_TitleRejected_di" bpmnElement="Event_End_TitleRejected">
+        <dc:Bounds x="1872" y="1142" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1855" y="1185" width="70" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_DisburseFunds_di" bpmnElement="Activity_DisburseFunds">
+        <dc:Bounds x="2170" y="1120" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Error_DisbursementFail_di" bpmnElement="Event_Error_DisbursementFail">
+        <dc:Bounds x="2252" y="1182" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2286" y="1190" width="88" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_ResolveDisbursementIssue_di" bpmnElement="Activity_ResolveDisbursementIssue">
+        <dc:Bounds x="2170" y="1225" width="120" height="65" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_DisburseRetryDecision_di" bpmnElement="Gateway_DisburseRetryDecision" isMarkerVisible="true">
+        <dc:Bounds x="2335" y="1232" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2316" y="1289" width="88" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Throw_CompensateAccount_di" bpmnElement="Event_Throw_CompensateAccount">
+        <dc:Bounds x="2422" y="1239" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2401" y="1282" width="79" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_End_DisbursementFailed_di" bpmnElement="Event_End_DisbursementFailed">
+        <dc:Bounds x="2502" y="1239" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2486" y="1282" width="69" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Lane: Core Banking Shapes -->
+      <bpmndi:BPMNShape id="Activity_CheckDocCompleteness_di" bpmnElement="Activity_CheckDocCompleteness">
+        <dc:Bounds x="230" y="1380" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_DocCompleteness_di" bpmnElement="Gateway_DocCompleteness" isMarkerVisible="true">
+        <dc:Bounds x="395" y="1395" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="389" y="1452" width="63" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_RequestMissingDocs_di" bpmnElement="Activity_RequestMissingDocs">
+        <dc:Bounds x="360" y="1470" width="120" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ForkVerification_di" bpmnElement="Gateway_ForkVerification">
+        <dc:Bounds x="495" y="1395" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="488" y="1452" width="64" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_VerifyKYC_di" bpmnElement="Activity_VerifyKYC">
+        <dc:Bounds x="580" y="1340" width="120" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_KYCResult_di" bpmnElement="Gateway_KYCResult" isMarkerVisible="true">
+        <dc:Bounds x="735" y="1345" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="726" y="1402" width="69" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_RequestBureauScore_di" bpmnElement="Activity_RequestBureauScore">
+        <dc:Bounds x="580" y="1420" width="120" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Error_BureauAPI_di" bpmnElement="Event_Error_BureauAPI">
+        <dc:Bounds x="662" y="1462" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="686" y="1485" width="88" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_BureauRetries_di" bpmnElement="Gateway_BureauRetries" isMarkerVisible="true">
+        <dc:Bounds x="735" y="1455" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="720" y="1512" width="81" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_JoinVerification_di" bpmnElement="Gateway_JoinVerification">
+        <dc:Bounds x="895" y="1395" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="879" y="1452" width="83" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_FraudScreening_di" bpmnElement="Activity_FraudScreening">
+        <dc:Bounds x="980" y="1380" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_FraudOutcome_di" bpmnElement="Gateway_FraudOutcome" isMarkerVisible="true">
+        <dc:Bounds x="1135" y="1395" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1120" y="1452" width="81" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_AssessEligibility_di" bpmnElement="Activity_AssessEligibility">
+        <dc:Bounds x="1220" y="1380" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_EligibilityOutcome_di" bpmnElement="Gateway_EligibilityOutcome" isMarkerVisible="true">
+        <dc:Bounds x="1375" y="1395" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1356" y="1452" width="89" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_End_ScoreRejected_di" bpmnElement="Event_End_ScoreRejected">
+        <dc:Bounds x="1462" y="1472" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1441" y="1515" width="79" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_GenerateLoanOffer_di" bpmnElement="Activity_GenerateLoanOffer">
+        <dc:Bounds x="1620" y="1380" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_SendOffer_di" bpmnElement="Activity_SendOffer">
+        <dc:Bounds x="1770" y="1380" width="110" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_CreateLoanAccount_di" bpmnElement="Activity_CreateLoanAccount">
+        <dc:Bounds x="2020" y="1380" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Comp_Account_di" bpmnElement="Event_Comp_Account">
+        <dc:Bounds x="2042" y="1442" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_ReverseLoanAccount_di" bpmnElement="Activity_ReverseLoanAccount">
+        <dc:Bounds x="2020" y="1485" width="120" height="40" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_NotifyDisbursement_di" bpmnElement="Activity_NotifyDisbursement">
+        <dc:Bounds x="2330" y="1380" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_End_LoanDisbursed_di" bpmnElement="Event_End_LoanDisbursed">
+        <dc:Bounds x="2492" y="1402" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2478" y="1445" width="65" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Message Flows -->
+      <bpmndi:BPMNEdge id="MsgFlow_RequestScore_di" bpmnElement="MsgFlow_RequestScore">
+        <di:waypoint x="640" y="1420" />
+        <di:waypoint x="640" y="150" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="646" y="1120" width="67" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MsgFlow_ReceiveScore_di" bpmnElement="MsgFlow_ReceiveScore">
+        <di:waypoint x="680" y="150" />
+        <di:waypoint x="680" y="1420" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="687" y="1120" width="62" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+
+      <!-- Main Process Sequence Flow Edges -->
+      <bpmndi:BPMNEdge id="Flow_Start_To_DocCheck_di" bpmnElement="Flow_Start_To_DocCheck">
+        <di:waypoint x="250" y="308" />
+        <di:waypoint x="250" y="1380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_DocCompleteness_di" bpmnElement="Flow_To_DocCompleteness">
+        <di:waypoint x="350" y="1420" />
+        <di:waypoint x="395" y="1420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Docs_Complete_di" bpmnElement="Flow_Docs_Complete">
+        <di:waypoint x="445" y="1420" />
+        <di:waypoint x="495" y="1420" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="446" y="1402" width="48" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Docs_Incomplete_di" bpmnElement="Flow_Docs_Incomplete">
+        <di:waypoint x="420" y="1445" />
+        <di:waypoint x="420" y="1470" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="421" y="1448" width="79" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_UploadMissing_di" bpmnElement="Flow_To_UploadMissing">
+        <di:waypoint x="420" y="1470" />
+        <di:waypoint x="420" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ResubmitDocs_To_Check_di" bpmnElement="Flow_ResubmitDocs_To_Check">
+        <di:waypoint x="380" y="330" />
+        <di:waypoint x="380" y="1350" />
+        <di:waypoint x="290" y="1350" />
+        <di:waypoint x="290" y="1380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_DocTimer_To_Lapse_di" bpmnElement="Flow_DocTimer_To_Lapse">
+        <di:waypoint x="478" y="330" />
+        <di:waypoint x="532" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Fork_To_KYC_di" bpmnElement="Flow_Fork_To_KYC">
+        <di:waypoint x="520" y="1395" />
+        <di:waypoint x="520" y="1370" />
+        <di:waypoint x="580" y="1370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_KYCResult_di" bpmnElement="Flow_To_KYCResult">
+        <di:waypoint x="700" y="1370" />
+        <di:waypoint x="735" y="1370" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_KYC_Matched_di" bpmnElement="Flow_KYC_Matched">
+        <di:waypoint x="785" y="1370" />
+        <di:waypoint x="920" y="1370" />
+        <di:waypoint x="920" y="1395" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="825" y="1352" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_KYC_Mismatch_di" bpmnElement="Flow_KYC_Mismatch">
+        <di:waypoint x="760" y="1345" />
+        <di:waypoint x="760" y="550" />
+        <di:waypoint x="700" y="550" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="763" y="930" width="73" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_ManualKYCDecision_di" bpmnElement="Flow_To_ManualKYCDecision">
+        <di:waypoint x="760" y="510" />
+        <di:waypoint x="795" y="510" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_KYC_Resolved_di" bpmnElement="Flow_KYC_Resolved">
+        <di:waypoint x="820" y="535" />
+        <di:waypoint x="820" y="1420" />
+        <di:waypoint x="895" y="1420" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="826" y="960" width="47" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_KYC_Unresolved_di" bpmnElement="Flow_KYC_Unresolved">
+        <di:waypoint x="845" y="510" />
+        <di:waypoint x="892" y="510" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="839" y="492" width="59" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Fork_To_Bureau_di" bpmnElement="Flow_Fork_To_Bureau">
+        <di:waypoint x="520" y="1445" />
+        <di:waypoint x="520" y="1450" />
+        <di:waypoint x="580" y="1450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Bureau_Success_di" bpmnElement="Flow_Bureau_Success">
+        <di:waypoint x="700" y="1450" />
+        <di:waypoint x="895" y="1420" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="758" y="1432" width="80" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_BureauRetries_di" bpmnElement="Flow_To_BureauRetries">
+        <di:waypoint x="698" y="1480" />
+        <di:waypoint x="735" y="1480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Bureau_Retry_di" bpmnElement="Flow_Bureau_Retry">
+        <di:waypoint x="760" y="1505" />
+        <di:waypoint x="760" y="1520" />
+        <di:waypoint x="640" y="1520" />
+        <di:waypoint x="640" y="1480" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="677" y="1502" width="46" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Bureau_MaxRetries_di" bpmnElement="Flow_Bureau_MaxRetries">
+        <di:waypoint x="785" y="1480" />
+        <di:waypoint x="860" y="1480" />
+        <di:waypoint x="860" y="550" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="782" y="1462" width="83" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ManualBureau_To_Join_di" bpmnElement="Flow_ManualBureau_To_Join">
+        <di:waypoint x="900" y="550" />
+        <di:waypoint x="900" y="1395" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Fork_To_Income_di" bpmnElement="Flow_Fork_To_Income">
+        <di:waypoint x="520" y="1395" />
+        <di:waypoint x="520" y="580" />
+        <di:waypoint x="740" y="580" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Income_To_Join_di" bpmnElement="Flow_Income_To_Join">
+        <di:waypoint x="860" y="580" />
+        <di:waypoint x="920" y="580" />
+        <di:waypoint x="920" y="1395" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Join_To_Fraud_di" bpmnElement="Flow_Join_To_Fraud">
+        <di:waypoint x="945" y="1420" />
+        <di:waypoint x="980" y="1420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_FraudOutcome_di" bpmnElement="Flow_To_FraudOutcome">
+        <di:waypoint x="1100" y="1420" />
+        <di:waypoint x="1135" y="1420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Fraud_Clean_di" bpmnElement="Flow_Fraud_Clean">
+        <di:waypoint x="1185" y="1420" />
+        <di:waypoint x="1220" y="1420" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1184" y="1402" width="38" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Fraud_Hit_di" bpmnElement="Flow_Fraud_Hit">
+        <di:waypoint x="1160" y="1395" />
+        <di:waypoint x="1160" y="1040" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1164" y="1210" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Fraud_To_End_di" bpmnElement="Flow_Fraud_To_End">
+        <di:waypoint x="1460" y="965" />
+        <di:waypoint x="1502" y="965" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_EligibilityOutcome_di" bpmnElement="Flow_To_EligibilityOutcome">
+        <di:waypoint x="1340" y="1420" />
+        <di:waypoint x="1375" y="1420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Eligibility_AutoApprove_di" bpmnElement="Flow_Eligibility_AutoApprove">
+        <di:waypoint x="1425" y="1420" />
+        <di:waypoint x="1620" y="1420" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1488" y="1402" width="67" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Eligibility_Manual_di" bpmnElement="Flow_Eligibility_Manual">
+        <di:waypoint x="1400" y="1395" />
+        <di:waypoint x="1400" y="740" />
+        <di:waypoint x="1420" y="740" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1403" y="1060" width="75" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Eligibility_Counter_di" bpmnElement="Flow_Eligibility_Counter">
+        <di:waypoint x="1400" y="1395" />
+        <di:waypoint x="1400" y="510" />
+        <di:waypoint x="1420" y="510" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1402" y="950" width="67" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Eligibility_Reject_di" bpmnElement="Flow_Eligibility_Reject">
+        <di:waypoint x="1400" y="1445" />
+        <di:waypoint x="1400" y="1490" />
+        <di:waypoint x="1462" y="1490" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1398" y="1465" width="64" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_ReviewCounterOffer_di" bpmnElement="Flow_To_ReviewCounterOffer">
+        <di:waypoint x="1480" y="470" />
+        <di:waypoint x="1480" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_CounterDecision_di" bpmnElement="Flow_To_CounterDecision">
+        <di:waypoint x="1540" y="290" />
+        <di:waypoint x="1575" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Counter_Accepted_di" bpmnElement="Flow_Counter_Accepted">
+        <di:waypoint x="1600" y="315" />
+        <di:waypoint x="1600" y="1360" />
+        <di:waypoint x="1280" y="1360" />
+        <di:waypoint x="1280" y="1380" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1607" y="830" width="47" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Counter_Declined_di" bpmnElement="Flow_Counter_Declined">
+        <di:waypoint x="1625" y="290" />
+        <di:waypoint x="1662" y="290" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1624" y="272" width="43" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Underwriter_To_Checks_di" bpmnElement="Flow_Underwriter_To_Checks">
+        <di:waypoint x="1540" y="740" />
+        <di:waypoint x="1575" y="740" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Checks_To_SeniorCommittee_di" bpmnElement="Flow_Checks_To_SeniorCommittee">
+        <di:waypoint x="1625" y="740" />
+        <di:waypoint x="1670" y="740" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1607" y="710" width="86" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Checks_To_Collateral_di" bpmnElement="Flow_Checks_To_Collateral">
+        <di:waypoint x="1600" y="765" />
+        <di:waypoint x="1600" y="1160" />
+        <di:waypoint x="1620" y="1160" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1604" y="960" width="72" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Checks_Standard_di" bpmnElement="Flow_Checks_Standard">
+        <di:waypoint x="1600" y="715" />
+        <di:waypoint x="1600" y="660" />
+        <di:waypoint x="1860" y="660" />
+        <di:waypoint x="1860" y="715" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1708" y="642" width="45" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Senior_To_Join_di" bpmnElement="Flow_Senior_To_Join">
+        <di:waypoint x="1790" y="740" />
+        <di:waypoint x="1835" y="740" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_CollateralOutcome_di" bpmnElement="Flow_To_CollateralOutcome">
+        <di:waypoint x="1740" y="1160" />
+        <di:waypoint x="1775" y="1160" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Collateral_Approved_di" bpmnElement="Flow_Collateral_Approved">
+        <di:waypoint x="1825" y="1160" />
+        <di:waypoint x="1860" y="1160" />
+        <di:waypoint x="1860" y="765" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1828" y="960" width="47" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Collateral_TitleIssue_di" bpmnElement="Flow_Collateral_TitleIssue">
+        <di:waypoint x="1800" y="1135" />
+        <di:waypoint x="1800" y="1110" />
+        <di:waypoint x="1890" y="1110" />
+        <di:waypoint x="1890" y="1142" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1820" y="1080" width="60" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Underwriting_To_Offer_di" bpmnElement="Flow_Underwriting_To_Offer">
+        <di:waypoint x="1860" y="765" />
+        <di:waypoint x="1860" y="1350" />
+        <di:waypoint x="1680" y="1350" />
+        <di:waypoint x="1680" y="1380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Offer_To_Send_di" bpmnElement="Flow_Offer_To_Send">
+        <di:waypoint x="1740" y="1420" />
+        <di:waypoint x="1770" y="1420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SendOffer_To_Accept_di" bpmnElement="Flow_SendOffer_To_Accept">
+        <di:waypoint x="1825" y="1380" />
+        <di:waypoint x="1825" y="290" />
+        <di:waypoint x="1890" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_OfferExpired_To_End_di" bpmnElement="Flow_OfferExpired_To_End">
+        <di:waypoint x="2008" y="330" />
+        <di:waypoint x="2062" y="330" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Accept_To_ESign_di" bpmnElement="Flow_Accept_To_ESign">
+        <di:waypoint x="2010" y="290" />
+        <di:waypoint x="2050" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ESign_To_AttemptCheck_di" bpmnElement="Flow_ESign_To_AttemptCheck">
+        <di:waypoint x="2170" y="290" />
+        <di:waypoint x="2205" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ESSign_Success_di" bpmnElement="Flow_ESSign_Success">
+        <di:waypoint x="2230" y="315" />
+        <di:waypoint x="2230" y="1350" />
+        <di:waypoint x="2080" y="1350" />
+        <di:waypoint x="2080" y="1380" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2233" y="830" width="35" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ESign_Retry_di" bpmnElement="Flow_ESign_Retry">
+        <di:waypoint x="2230" y="265" />
+        <di:waypoint x="2230" y="230" />
+        <di:waypoint x="2110" y="230" />
+        <di:waypoint x="2110" y="250" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2129" y="212" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ESign_Failed_di" bpmnElement="Flow_ESign_Failed">
+        <di:waypoint x="2255" y="290" />
+        <di:waypoint x="2302" y="290" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2240" y="272" width="78" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AccountCreated_To_Disburse_di" bpmnElement="Flow_AccountCreated_To_Disburse">
+        <di:waypoint x="2140" y="1420" />
+        <di:waypoint x="2200" y="1420" />
+        <di:waypoint x="2200" y="1200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Disburse_To_Notify_di" bpmnElement="Flow_Disburse_To_Notify">
+        <di:waypoint x="2290" y="1160" />
+        <di:waypoint x="2380" y="1160" />
+        <di:waypoint x="2380" y="1380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Notify_To_DisbursedEnd_di" bpmnElement="Flow_Notify_To_DisbursedEnd">
+        <di:waypoint x="2450" y="1420" />
+        <di:waypoint x="2492" y="1420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_ResolveDisbursement_di" bpmnElement="Flow_To_ResolveDisbursement">
+        <di:waypoint x="2270" y="1218" />
+        <di:waypoint x="2270" y="1225" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_DisburseRetryDecision_di" bpmnElement="Flow_To_DisburseRetryDecision">
+        <di:waypoint x="2290" y="1257" />
+        <di:waypoint x="2335" y="1257" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Disbursement_Retry_di" bpmnElement="Flow_Disbursement_Retry">
+        <di:waypoint x="2360" y="1232" />
+        <di:waypoint x="2360" y="1140" />
+        <di:waypoint x="2290" y="1140" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2366" y="1183" width="67" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Disbursement_FailFinal_di" bpmnElement="Flow_Disbursement_FailFinal">
+        <di:waypoint x="2385" y="1257" />
+        <di:waypoint x="2422" y="1257" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2380" y="1239" width="87" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_DisbursementFailEnd_di" bpmnElement="Flow_To_DisbursementFailEnd">
+        <di:waypoint x="2458" y="1257" />
+        <di:waypoint x="2502" y="1257" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Withdrawal_To_Comp_di" bpmnElement="Flow_Withdrawal_To_Comp">
+        <di:waypoint x="1538" y="700" />
+        <di:waypoint x="1600" y="700" />
+        <di:waypoint x="1600" y="670" />
+        <di:waypoint x="1662" y="670" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_WithdrawnEnd_di" bpmnElement="Flow_To_WithdrawnEnd">
+        <di:waypoint x="1698" y="670" />
+        <di:waypoint x="1750" y="670" />
+        <di:waypoint x="1750" y="230" />
+        <di:waypoint x="1802" y="230" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

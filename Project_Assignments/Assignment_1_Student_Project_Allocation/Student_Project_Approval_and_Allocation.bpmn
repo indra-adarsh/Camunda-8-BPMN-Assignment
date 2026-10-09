@@ -1,0 +1,1028 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:zeebe="http://camunda.org/schema/zeebe/1.0" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_StudentProjectAllocation" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.49.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.9.0">
+  <bpmn:collaboration id="Collaboration_StudentProjectAllocation">
+    <bpmn:participant id="Participant_Department" name="Student Project Approval &amp; Allocation System" processRef="Process_StudentProjectAllocation" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_StudentProjectAllocation" name="Student Project Approval &amp; Allocation System" isExecutable="true">
+    <bpmn:laneSet id="LaneSet_Department">
+      <bpmn:lane id="Lane_Student" name="Student / Team">
+        <bpmn:flowNodeRef>Event_Start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_SubmitProposal</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_Timer_ProposalDeadline</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_ResubmitProposal</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_ReviseProposal</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_End_Lapsed</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Coordinator" name="Project Coordinator">
+        <bpmn:flowNodeRef>Activity_HandleLateSubmission</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_LateDecision</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_EscalateToCoordinator</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_ScreenProposal</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_ReviewDuplicate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_DuplicateDecision</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_End_Plagiarized</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_ManualGuideAllocation</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_ManualNotification</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Committee" name="Review Committee (incl. HoD)">
+        <bpmn:flowNodeRef>Activity_EvaluateProposal</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_Timer_ReviewReminder</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_Timer_SLAEscalation</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_HoDEscalation</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_CommitteeDecision</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_RevisionCycles</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Guide" name="Faculty Guide">
+        <bpmn:flowNodeRef>SubProcess_GuideAllocation</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_Message_Withdrawal</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_End_Withdrawn</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_System" name="Project Management System">
+        <bpmn:flowNodeRef>Activity_ValidateProposal</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_ValidationOutcome</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_NotifyInvalidTeam</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_End_InvalidTeam</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_ReturnErrorList</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_CheckAttempts</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_CheckSimilarity</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_SimilarityOutcome</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_SendReviewReminder</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_End_ReminderSent</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_SendRejectionReasons</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_AllowNewTopic</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_End_Rejected</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_MatchGuide</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_GuideMatchOutcome</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Activity_NotifyStudentAndRecord</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_Error_NotificationFailure</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Event_End_Allocated</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+
+    <!-- Student / Team Flow Nodes -->
+    <bpmn:startEvent id="Event_Start" name="Student Team Decides to Submit Proposal">
+      <bpmn:outgoing>Flow_Start_To_Submit</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Activity_SubmitProposal" name="Submit Project Proposal">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Start_To_Submit</bpmn:incoming>
+      <bpmn:incoming>Flow_Late_Approved</bpmn:incoming>
+      <bpmn:incoming>Flow_Duplicate_Modify</bpmn:incoming>
+      <bpmn:incoming>Flow_NewTopic_Yes</bpmn:incoming>
+      <bpmn:outgoing>Flow_Submit_To_Validate</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="Event_Timer_ProposalDeadline" name="Submission Deadline Passed (F4)" attachedToRef="Activity_SubmitProposal">
+      <bpmn:outgoing>Flow_Deadline_To_Coordinator</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDef_Deadline">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">P14D</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:userTask id="Activity_ResubmitProposal" name="Resubmit Corrected Proposal">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Attempts_UnderLimit</bpmn:incoming>
+      <bpmn:incoming>Flow_Escalation_Resolved</bpmn:incoming>
+      <bpmn:outgoing>Flow_Resubmit_To_Validate</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Activity_ReviseProposal" name="Revise Proposal within 7-Day Window (F5)">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Committee_Revise</bpmn:incoming>
+      <bpmn:outgoing>Flow_Revise_To_CycleCheck</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="Event_End_Lapsed" name="Proposal Closed / Lapsed">
+      <bpmn:incoming>Flow_Late_Rejected</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Coordinator Flow Nodes -->
+    <bpmn:userTask id="Activity_HandleLateSubmission" name="Review Late Submission Request (F4)">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Deadline_To_Coordinator</bpmn:incoming>
+      <bpmn:outgoing>Flow_To_LateDecision</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_LateDecision" name="Late Submission Approved?">
+      <bpmn:incoming>Flow_To_LateDecision</bpmn:incoming>
+      <bpmn:outgoing>Flow_Late_Approved</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Late_Rejected</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Activity_EscalateToCoordinator" name="Review Escalated Validation Errors (F1)">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Attempts_OverLimit</bpmn:incoming>
+      <bpmn:outgoing>Flow_Escalation_Resolved</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Activity_ScreenProposal" name="Coordinator Screens Proposal">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Validation_Passed</bpmn:incoming>
+      <bpmn:outgoing>Flow_Screen_To_Similarity</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Activity_ReviewDuplicate" name="Review Duplicate Match (F3)">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Similarity_Flagged</bpmn:incoming>
+      <bpmn:outgoing>Flow_To_DuplicateDecision</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_DuplicateDecision" name="Duplicate Resolution?">
+      <bpmn:incoming>Flow_To_DuplicateDecision</bpmn:incoming>
+      <bpmn:outgoing>Flow_Duplicate_Modify</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Duplicate_Reject</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Event_End_Plagiarized" name="Proposal Rejected (Plagiarism / Duplicate)">
+      <bpmn:incoming>Flow_Duplicate_Reject</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Activity_ManualGuideAllocation" name="Allocate Guide Manually / Co-Guide / Waitlist (F8)">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_GuideMatch_None</bpmn:incoming>
+      <bpmn:incoming>Flow_Guide_MaxRetries</bpmn:incoming>
+      <bpmn:outgoing>Flow_Manual_To_Notify</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Activity_ManualNotification" name="Send Manual Allocation Notification (F10)">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Notification_Fallback</bpmn:incoming>
+      <bpmn:outgoing>Flow_ManualNotify_To_End</bpmn:outgoing>
+    </bpmn:userTask>
+
+    <!-- Committee Flow Nodes -->
+    <bpmn:userTask id="Activity_EvaluateProposal" name="Review Committee Evaluates Proposal">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Similarity_Passed</bpmn:incoming>
+      <bpmn:incoming>Flow_Cycle_Allowed</bpmn:incoming>
+      <bpmn:incoming>Flow_HoD_To_Evaluate</bpmn:incoming>
+      <bpmn:outgoing>Flow_Evaluate_To_Decision</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="Event_Timer_ReviewReminder" name="SLA Warning (Non-interrupting) (F7)" cancelActivity="false" attachedToRef="Activity_EvaluateProposal">
+      <bpmn:outgoing>Flow_To_SendReminder</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDef_Reminder">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">P5D</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:boundaryEvent id="Event_Timer_SLAEscalation" name="SLA Exceeded Escalation (F7)" attachedToRef="Activity_EvaluateProposal">
+      <bpmn:outgoing>Flow_To_HoDEscalation</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="TimerEventDef_SLAEscalation">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">P10D</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:boundaryEvent>
+    <bpmn:userTask id="Activity_HoDEscalation" name="Escalate to HoD for Expedited Review (F7)">
+      <bpmn:extensionElements>
+        <zeebe:userTask />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_To_HoDEscalation</bpmn:incoming>
+      <bpmn:outgoing>Flow_HoD_To_Evaluate</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_CommitteeDecision" name="Committee Decision?">
+      <bpmn:incoming>Flow_Evaluate_To_Decision</bpmn:incoming>
+      <bpmn:outgoing>Flow_Committee_Approved</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Committee_Revise</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Committee_Rejected</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gateway_RevisionCycles" name="Revision Cycles &lt;= 2? (F5)">
+      <bpmn:incoming>Flow_Revise_To_CycleCheck</bpmn:incoming>
+      <bpmn:outgoing>Flow_Cycle_Allowed</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Cycle_Exceeded</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- System Flow Nodes -->
+    <bpmn:serviceTask id="Activity_ValidateProposal" name="Validate Form Completeness &amp; Team Rules">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="validate-proposal-rules" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Submit_To_Validate</bpmn:incoming>
+      <bpmn:incoming>Flow_Resubmit_To_Validate</bpmn:incoming>
+      <bpmn:outgoing>Flow_To_ValidationOutcome</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_ValidationOutcome" name="Validation Result?">
+      <bpmn:incoming>Flow_To_ValidationOutcome</bpmn:incoming>
+      <bpmn:outgoing>Flow_Validation_Passed</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Validation_TeamError</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Validation_FormErrors</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Activity_NotifyInvalidTeam" name="Notify Team Rule Violation (F2)">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="notify-invalid-team" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Validation_TeamError</bpmn:incoming>
+      <bpmn:outgoing>Flow_To_InvalidTeamEnd</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:endEvent id="Event_End_InvalidTeam" name="End (Invalid Team)">
+      <bpmn:incoming>Flow_To_InvalidTeamEnd</bpmn:incoming>
+      <bpmn:errorEventDefinition id="ErrorEventDef_InvalidTeam" errorRef="Error_InvalidTeam" />
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="Activity_ReturnErrorList" name="Return Error List (F1)">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="generate-validation-errors" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Validation_FormErrors</bpmn:incoming>
+      <bpmn:outgoing>Flow_To_CheckAttempts</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_CheckAttempts" name="Resubmission Attempt &lt;= 2? (F1)">
+      <bpmn:incoming>Flow_To_CheckAttempts</bpmn:incoming>
+      <bpmn:outgoing>Flow_Attempts_UnderLimit</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Attempts_OverLimit</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Activity_CheckSimilarity" name="Run Similarity / Duplicate-Topic Check">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="run-similarity-check" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Screen_To_Similarity</bpmn:incoming>
+      <bpmn:outgoing>Flow_To_SimilarityOutcome</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_SimilarityOutcome" name="Similarity Score High? (F3)">
+      <bpmn:incoming>Flow_To_SimilarityOutcome</bpmn:incoming>
+      <bpmn:outgoing>Flow_Similarity_Passed</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Similarity_Flagged</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sendTask id="Activity_SendReviewReminder" name="Send Committee SLA Reminder (F7)">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="send-review-reminder" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_To_SendReminder</bpmn:incoming>
+      <bpmn:outgoing>Flow_To_ReminderEnd</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:endEvent id="Event_End_ReminderSent" name="Reminder Logged">
+      <bpmn:incoming>Flow_To_ReminderEnd</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="Activity_SendRejectionReasons" name="Send Rejection Reasons to Student (F6)">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="send-rejection-reasons" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Committee_Rejected</bpmn:incoming>
+      <bpmn:incoming>Flow_Cycle_Exceeded</bpmn:incoming>
+      <bpmn:outgoing>Flow_To_AllowNewTopic</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Gateway_AllowNewTopic" name="New Topic Allowed (1 Attempt)? (F6)">
+      <bpmn:incoming>Flow_To_AllowNewTopic</bpmn:incoming>
+      <bpmn:outgoing>Flow_NewTopic_Yes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_NewTopic_No</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Event_End_Rejected" name="End (Proposal Rejected)">
+      <bpmn:incoming>Flow_NewTopic_No</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:businessRuleTask id="Activity_MatchGuide" name="Check Guide Availability &amp; Workload (F8)">
+      <bpmn:extensionElements>
+        <zeebe:calledDecision decisionId="check-guide-availability" resultVariable="guideMatchResult" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_Committee_Approved</bpmn:incoming>
+      <bpmn:incoming>Flow_Decline_Retry</bpmn:incoming>
+      <bpmn:outgoing>Flow_To_GuideMatchOutcome</bpmn:outgoing>
+    </bpmn:businessRuleTask>
+    <bpmn:exclusiveGateway id="Gateway_GuideMatchOutcome" name="Guide Available? (F8)">
+      <bpmn:incoming>Flow_To_GuideMatchOutcome</bpmn:incoming>
+      <bpmn:outgoing>Flow_GuideMatch_Found</bpmn:outgoing>
+      <bpmn:outgoing>Flow_GuideMatch_None</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <!-- Faculty Guide Sub-Process & Lane Nodes -->
+    <bpmn:subProcess id="SubProcess_GuideAllocation" name="Faculty Guide Allocation &amp; Acceptance">
+      <bpmn:incoming>Flow_GuideMatch_Found</bpmn:incoming>
+      <bpmn:outgoing>Flow_AllocSub_To_Notify</bpmn:outgoing>
+      <bpmn:startEvent id="SubEvent_Start" name="Start Allocation">
+        <bpmn:outgoing>SubFlow_1</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:serviceTask id="Activity_ReserveSlot" name="Reserve Guide Quota Slot">
+        <bpmn:extensionElements>
+          <zeebe:taskDefinition type="reserve-guide-slot" />
+        </bpmn:extensionElements>
+        <bpmn:incoming>SubFlow_1</bpmn:incoming>
+        <bpmn:outgoing>SubFlow_2</bpmn:outgoing>
+      </bpmn:serviceTask>
+      <bpmn:boundaryEvent id="Event_Comp_Slot" name="Compensate Slot Reservation" attachedToRef="Activity_ReserveSlot">
+        <bpmn:compensateEventDefinition id="CompEventDef_Slot" />
+      </bpmn:boundaryEvent>
+      <bpmn:serviceTask id="Activity_ReleaseSlot" name="Release Guide Quota Slot (F11)" isForCompensation="true">
+        <bpmn:extensionElements>
+          <zeebe:taskDefinition type="release-guide-slot" />
+        </bpmn:extensionElements>
+      </bpmn:serviceTask>
+      <bpmn:sendTask id="Activity_SendAllocationRequest" name="Send Allocation Request to Guide">
+        <bpmn:extensionElements>
+          <zeebe:taskDefinition type="send-guide-request" />
+        </bpmn:extensionElements>
+        <bpmn:incoming>SubFlow_2</bpmn:incoming>
+        <bpmn:outgoing>SubFlow_3</bpmn:outgoing>
+      </bpmn:sendTask>
+      <bpmn:userTask id="Activity_GuideRespond" name="Guide Reviews Request (Accept / Decline)">
+        <bpmn:extensionElements>
+          <zeebe:userTask />
+        </bpmn:extensionElements>
+        <bpmn:incoming>SubFlow_3</bpmn:incoming>
+        <bpmn:outgoing>SubFlow_4</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:boundaryEvent id="Event_Timer_GuideSilent" name="Guide Silent (3 Days) (F9)" attachedToRef="Activity_GuideRespond">
+        <bpmn:outgoing>SubFlow_Timeout</bpmn:outgoing>
+        <bpmn:timerEventDefinition id="TimerEventDef_GuideSilent">
+          <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">P3D</bpmn:timeDuration>
+        </bpmn:timerEventDefinition>
+      </bpmn:boundaryEvent>
+      <bpmn:exclusiveGateway id="SubGateway_Decision" name="Guide Accepted?">
+        <bpmn:incoming>SubFlow_4</bpmn:incoming>
+        <bpmn:outgoing>SubFlow_Accept</bpmn:outgoing>
+        <bpmn:outgoing>SubFlow_Decline</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:endEvent id="SubEvent_EndSuccess" name="Allocation Accepted">
+        <bpmn:incoming>SubFlow_Accept</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:endEvent id="SubEvent_EndDecline" name="Guide Declined / Unresponsive (F9)">
+        <bpmn:incoming>SubFlow_Decline</bpmn:incoming>
+        <bpmn:incoming>SubFlow_Timeout</bpmn:incoming>
+        <bpmn:errorEventDefinition id="ErrorEventDef_GuideDecline" errorRef="Error_GuideDecline" />
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="SubFlow_1" sourceRef="SubEvent_Start" targetRef="Activity_ReserveSlot" />
+      <bpmn:sequenceFlow id="SubFlow_2" sourceRef="Activity_ReserveSlot" targetRef="Activity_SendAllocationRequest" />
+      <bpmn:sequenceFlow id="SubFlow_3" sourceRef="Activity_SendAllocationRequest" targetRef="Activity_GuideRespond" />
+      <bpmn:sequenceFlow id="SubFlow_4" sourceRef="Activity_GuideRespond" targetRef="SubGateway_Decision" />
+      <bpmn:sequenceFlow id="SubFlow_Accept" name="Yes" sourceRef="SubGateway_Decision" targetRef="SubEvent_EndSuccess" />
+      <bpmn:sequenceFlow id="SubFlow_Decline" name="No" sourceRef="SubGateway_Decision" targetRef="SubEvent_EndDecline" />
+      <bpmn:sequenceFlow id="SubFlow_Timeout" sourceRef="Event_Timer_GuideSilent" targetRef="SubEvent_EndDecline" />
+    </bpmn:subProcess>
+
+    <bpmn:boundaryEvent id="Event_Error_GuideDecline" name="Guide Unavailable / Declined (F9)" attachedToRef="SubProcess_GuideAllocation">
+      <bpmn:outgoing>Flow_To_GuideDeclineCheck</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDef_CatchDecline" errorRef="Error_GuideDecline" />
+    </bpmn:boundaryEvent>
+    <bpmn:exclusiveGateway id="Gateway_GuideDeclineAttempts" name="Decline Attempts &lt; 3? (F9)">
+      <bpmn:incoming>Flow_To_GuideDeclineCheck</bpmn:incoming>
+      <bpmn:outgoing>Flow_Decline_Retry</bpmn:outgoing>
+      <bpmn:outgoing>Flow_Guide_MaxRetries</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+
+    <bpmn:boundaryEvent id="Event_Message_Withdrawal" name="Withdrawal Request Received (F11)" attachedToRef="SubProcess_GuideAllocation">
+      <bpmn:outgoing>Flow_To_CompensationThrow</bpmn:outgoing>
+      <bpmn:messageEventDefinition id="MessageEventDef_Withdrawal" messageRef="Message_Withdrawal" />
+    </bpmn:boundaryEvent>
+    <bpmn:intermediateThrowEvent id="Event_Throw_CompensateSlot" name="Trigger Slot Release Compensation (F11)">
+      <bpmn:incoming>Flow_To_CompensationThrow</bpmn:incoming>
+      <bpmn:outgoing>Flow_To_WithdrawnEnd</bpmn:outgoing>
+      <bpmn:compensateEventDefinition id="CompEventDef_Throw" />
+    </bpmn:intermediateThrowEvent>
+    <bpmn:endEvent id="Event_End_Withdrawn" name="End (Project Withdrawn)">
+      <bpmn:incoming>Flow_To_WithdrawnEnd</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Final Notification & Database Recording -->
+    <bpmn:sendTask id="Activity_NotifyStudentAndRecord" name="Notify Student &amp; Record Allocation in System">
+      <bpmn:extensionElements>
+        <zeebe:taskDefinition type="notify-student-and-record" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_AllocSub_To_Notify</bpmn:incoming>
+      <bpmn:incoming>Flow_Manual_To_Notify</bpmn:incoming>
+      <bpmn:outgoing>Flow_Notify_To_End</bpmn:outgoing>
+    </bpmn:sendTask>
+    <bpmn:boundaryEvent id="Event_Error_NotificationFailure" name="Notification / DB Write Error (F10)" attachedToRef="Activity_NotifyStudentAndRecord">
+      <bpmn:outgoing>Flow_Notification_Fallback</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="ErrorEventDef_NotificationFailure" errorRef="Error_NotificationFailure" />
+    </bpmn:boundaryEvent>
+    <bpmn:endEvent id="Event_End_Allocated" name="End (Project Allocated &amp; Confirmed)">
+      <bpmn:incoming>Flow_Notify_To_End</bpmn:incoming>
+      <bpmn:incoming>Flow_ManualNotify_To_End</bpmn:incoming>
+    </bpmn:endEvent>
+
+    <!-- Process Sequence Flows -->
+    <bpmn:sequenceFlow id="Flow_Start_To_Submit" sourceRef="Event_Start" targetRef="Activity_SubmitProposal" />
+    <bpmn:sequenceFlow id="Flow_Submit_To_Validate" sourceRef="Activity_SubmitProposal" targetRef="Activity_ValidateProposal" />
+    <bpmn:sequenceFlow id="Flow_Deadline_To_Coordinator" sourceRef="Event_Timer_ProposalDeadline" targetRef="Activity_HandleLateSubmission" />
+    <bpmn:sequenceFlow id="Flow_To_LateDecision" sourceRef="Activity_HandleLateSubmission" targetRef="Gateway_LateDecision" />
+    <bpmn:sequenceFlow id="Flow_Late_Approved" name="Approve Late" sourceRef="Gateway_LateDecision" targetRef="Activity_SubmitProposal" />
+    <bpmn:sequenceFlow id="Flow_Late_Rejected" name="Reject Late" sourceRef="Gateway_LateDecision" targetRef="Event_End_Lapsed" />
+    <bpmn:sequenceFlow id="Flow_To_ValidationOutcome" sourceRef="Activity_ValidateProposal" targetRef="Gateway_ValidationOutcome" />
+    <bpmn:sequenceFlow id="Flow_Validation_Passed" name="Valid" sourceRef="Gateway_ValidationOutcome" targetRef="Activity_ScreenProposal" />
+    <bpmn:sequenceFlow id="Flow_Validation_TeamError" name="Invalid Team Rules (F2)" sourceRef="Gateway_ValidationOutcome" targetRef="Activity_NotifyInvalidTeam" />
+    <bpmn:sequenceFlow id="Flow_To_InvalidTeamEnd" sourceRef="Activity_NotifyInvalidTeam" targetRef="Event_End_InvalidTeam" />
+    <bpmn:sequenceFlow id="Flow_Validation_FormErrors" name="Missing / Form Errors (F1)" sourceRef="Gateway_ValidationOutcome" targetRef="Activity_ReturnErrorList" />
+    <bpmn:sequenceFlow id="Flow_To_CheckAttempts" sourceRef="Activity_ReturnErrorList" targetRef="Gateway_CheckAttempts" />
+    <bpmn:sequenceFlow id="Flow_Attempts_UnderLimit" name="Attempts &lt;= 2" sourceRef="Gateway_CheckAttempts" targetRef="Activity_ResubmitProposal" />
+    <bpmn:sequenceFlow id="Flow_Resubmit_To_Validate" sourceRef="Activity_ResubmitProposal" targetRef="Activity_ValidateProposal" />
+    <bpmn:sequenceFlow id="Flow_Attempts_OverLimit" name="Attempts &gt; 2 (Escalate)" sourceRef="Gateway_CheckAttempts" targetRef="Activity_EscalateToCoordinator" />
+    <bpmn:sequenceFlow id="Flow_Escalation_Resolved" sourceRef="Activity_EscalateToCoordinator" targetRef="Activity_ResubmitProposal" />
+    <bpmn:sequenceFlow id="Flow_Screen_To_Similarity" sourceRef="Activity_ScreenProposal" targetRef="Activity_CheckSimilarity" />
+    <bpmn:sequenceFlow id="Flow_To_SimilarityOutcome" sourceRef="Activity_CheckSimilarity" targetRef="Gateway_SimilarityOutcome" />
+    <bpmn:sequenceFlow id="Flow_Similarity_Passed" name="Passed" sourceRef="Gateway_SimilarityOutcome" targetRef="Activity_EvaluateProposal" />
+    <bpmn:sequenceFlow id="Flow_Similarity_Flagged" name="High Similarity (F3)" sourceRef="Gateway_SimilarityOutcome" targetRef="Activity_ReviewDuplicate" />
+    <bpmn:sequenceFlow id="Flow_To_DuplicateDecision" sourceRef="Activity_ReviewDuplicate" targetRef="Gateway_DuplicateDecision" />
+    <bpmn:sequenceFlow id="Flow_Duplicate_Modify" name="Request Topic Modification" sourceRef="Gateway_DuplicateDecision" targetRef="Activity_SubmitProposal" />
+    <bpmn:sequenceFlow id="Flow_Duplicate_Reject" name="Reject Duplicate" sourceRef="Gateway_DuplicateDecision" targetRef="Event_End_Plagiarized" />
+    <bpmn:sequenceFlow id="Flow_To_SendReminder" sourceRef="Event_Timer_ReviewReminder" targetRef="Activity_SendReviewReminder" />
+    <bpmn:sequenceFlow id="Flow_To_ReminderEnd" sourceRef="Activity_SendReviewReminder" targetRef="Event_End_ReminderSent" />
+    <bpmn:sequenceFlow id="Flow_To_HoDEscalation" sourceRef="Event_Timer_SLAEscalation" targetRef="Activity_HoDEscalation" />
+    <bpmn:sequenceFlow id="Flow_HoD_To_Evaluate" sourceRef="Activity_HoDEscalation" targetRef="Activity_EvaluateProposal" />
+    <bpmn:sequenceFlow id="Flow_Evaluate_To_Decision" sourceRef="Activity_EvaluateProposal" targetRef="Gateway_CommitteeDecision" />
+    <bpmn:sequenceFlow id="Flow_Committee_Approved" name="Approved" sourceRef="Gateway_CommitteeDecision" targetRef="Activity_MatchGuide" />
+    <bpmn:sequenceFlow id="Flow_Committee_Revise" name="Revise (F5)" sourceRef="Gateway_CommitteeDecision" targetRef="Activity_ReviseProposal" />
+    <bpmn:sequenceFlow id="Flow_Revise_To_CycleCheck" sourceRef="Activity_ReviseProposal" targetRef="Gateway_RevisionCycles" />
+    <bpmn:sequenceFlow id="Flow_Cycle_Allowed" name="Cycles &lt;= 2" sourceRef="Gateway_RevisionCycles" targetRef="Activity_EvaluateProposal" />
+    <bpmn:sequenceFlow id="Flow_Cycle_Exceeded" name="Cycles &gt; 2 (Reject)" sourceRef="Gateway_RevisionCycles" targetRef="Activity_SendRejectionReasons" />
+    <bpmn:sequenceFlow id="Flow_Committee_Rejected" name="Rejected (F6)" sourceRef="Gateway_CommitteeDecision" targetRef="Activity_SendRejectionReasons" />
+    <bpmn:sequenceFlow id="Flow_To_AllowNewTopic" sourceRef="Activity_SendRejectionReasons" targetRef="Gateway_AllowNewTopic" />
+    <bpmn:sequenceFlow id="Flow_NewTopic_Yes" name="Yes (1 Chance)" sourceRef="Gateway_AllowNewTopic" targetRef="Activity_SubmitProposal" />
+    <bpmn:sequenceFlow id="Flow_NewTopic_No" name="No" sourceRef="Gateway_AllowNewTopic" targetRef="Event_End_Rejected" />
+    <bpmn:sequenceFlow id="Flow_To_GuideMatchOutcome" sourceRef="Activity_MatchGuide" targetRef="Gateway_GuideMatchOutcome" />
+    <bpmn:sequenceFlow id="Flow_GuideMatch_Found" name="Guide Available" sourceRef="Gateway_GuideMatchOutcome" targetRef="SubProcess_GuideAllocation" />
+    <bpmn:sequenceFlow id="Flow_GuideMatch_None" name="None (F8)" sourceRef="Gateway_GuideMatchOutcome" targetRef="Activity_ManualGuideAllocation" />
+    <bpmn:sequenceFlow id="Flow_Manual_To_Notify" sourceRef="Activity_ManualGuideAllocation" targetRef="Activity_NotifyStudentAndRecord" />
+    <bpmn:sequenceFlow id="Flow_AllocSub_To_Notify" sourceRef="SubProcess_GuideAllocation" targetRef="Activity_NotifyStudentAndRecord" />
+    <bpmn:sequenceFlow id="Flow_To_GuideDeclineCheck" sourceRef="Event_Error_GuideDecline" targetRef="Gateway_GuideDeclineAttempts" />
+    <bpmn:sequenceFlow id="Flow_Decline_Retry" name="Attempts &lt; 3" sourceRef="Gateway_GuideDeclineAttempts" targetRef="Activity_MatchGuide" />
+    <bpmn:sequenceFlow id="Flow_Guide_MaxRetries" name="Attempts &gt;= 3" sourceRef="Gateway_GuideDeclineAttempts" targetRef="Activity_ManualGuideAllocation" />
+    <bpmn:sequenceFlow id="Flow_To_CompensationThrow" sourceRef="Event_Message_Withdrawal" targetRef="Event_Throw_CompensateSlot" />
+    <bpmn:sequenceFlow id="Flow_To_WithdrawnEnd" sourceRef="Event_Throw_CompensateSlot" targetRef="Event_End_Withdrawn" />
+    <bpmn:sequenceFlow id="Flow_Notify_To_End" sourceRef="Activity_NotifyStudentAndRecord" targetRef="Event_End_Allocated" />
+    <bpmn:sequenceFlow id="Flow_Notification_Fallback" sourceRef="Event_Error_NotificationFailure" targetRef="Activity_ManualNotification" />
+    <bpmn:sequenceFlow id="Flow_ManualNotify_To_End" sourceRef="Activity_ManualNotification" targetRef="Event_End_Allocated" />
+  </bpmn:process>
+
+  <bpmn:error id="Error_InvalidTeam" name="Error_InvalidTeam" errorCode="ERR_INVALID_TEAM" />
+  <bpmn:error id="Error_GuideDecline" name="Error_GuideDecline" errorCode="ERR_GUIDE_DECLINE" />
+  <bpmn:error id="Error_NotificationFailure" name="Error_NotificationFailure" errorCode="ERR_NOTIF_FAIL" />
+  <bpmn:message id="Message_Withdrawal" name="Message_Withdrawal" />
+
+  <bpmndi:BPMNDiagram id="BPMNDiagram_StudentProjectAllocation">
+    <bpmndi:BPMNPlane id="BPMNPlane_StudentProjectAllocation" bpmnElement="Collaboration_StudentProjectAllocation">
+      <!-- Participant Pool -->
+      <bpmndi:BPMNShape id="Participant_Department_di" bpmnElement="Participant_Department" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="2200" height="1200" />
+      </bpmndi:BPMNShape>
+
+      <!-- Lanes -->
+      <bpmndi:BPMNShape id="Lane_Student_di" bpmnElement="Lane_Student" isHorizontal="true">
+        <dc:Bounds x="190" y="80" width="2170" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Coordinator_di" bpmnElement="Lane_Coordinator" isHorizontal="true">
+        <dc:Bounds x="190" y="310" width="2170" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Committee_di" bpmnElement="Lane_Committee" isHorizontal="true">
+        <dc:Bounds x="190" y="540" width="2170" height="240" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Guide_di" bpmnElement="Lane_Guide" isHorizontal="true">
+        <dc:Bounds x="190" y="780" width="2170" height="260" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_System_di" bpmnElement="Lane_System" isHorizontal="true">
+        <dc:Bounds x="190" y="1040" width="2170" height="240" />
+      </bpmndi:BPMNShape>
+
+      <!-- Lane: Student Shapes -->
+      <bpmndi:BPMNShape id="Event_Start_di" bpmnElement="Event_Start">
+        <dc:Bounds x="232" y="162" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="207" y="205" width="87" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_SubmitProposal_di" bpmnElement="Activity_SubmitProposal">
+        <dc:Bounds x="320" y="140" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Timer_ProposalDeadline_di" bpmnElement="Event_Timer_ProposalDeadline">
+        <dc:Bounds x="402" y="202" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="438" y="218" width="85" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_ResubmitProposal_di" bpmnElement="Activity_ResubmitProposal">
+        <dc:Bounds x="640" y="140" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_ReviseProposal_di" bpmnElement="Activity_ReviseProposal">
+        <dc:Bounds x="1260" y="140" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_End_Lapsed_di" bpmnElement="Event_End_Lapsed">
+        <dc:Bounds x="602" y="162" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="578" y="205" width="85" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Lane: Coordinator Shapes -->
+      <bpmndi:BPMNShape id="Activity_HandleLateSubmission_di" bpmnElement="Activity_HandleLateSubmission">
+        <dc:Bounds x="360" y="380" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_LateDecision_di" bpmnElement="Gateway_LateDecision" isMarkerVisible="true">
+        <dc:Bounds x="515" y="395" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="498" y="452" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_EscalateToCoordinator_di" bpmnElement="Activity_EscalateToCoordinator">
+        <dc:Bounds x="640" y="380" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_ScreenProposal_di" bpmnElement="Activity_ScreenProposal">
+        <dc:Bounds x="800" y="380" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_ReviewDuplicate_di" bpmnElement="Activity_ReviewDuplicate">
+        <dc:Bounds x="960" y="380" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_DuplicateDecision_di" bpmnElement="Gateway_DuplicateDecision" isMarkerVisible="true">
+        <dc:Bounds x="1125" y="395" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1121" y="452" width="58" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_End_Plagiarized_di" bpmnElement="Event_End_Plagiarized">
+        <dc:Bounds x="1232" y="402" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1207" y="445" width="87" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_ManualGuideAllocation_di" bpmnElement="Activity_ManualGuideAllocation">
+        <dc:Bounds x="1800" y="380" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_ManualNotification_di" bpmnElement="Activity_ManualNotification">
+        <dc:Bounds x="2020" y="380" width="130" height="80" />
+      </bpmndi:BPMNShape>
+
+      <!-- Lane: Committee Shapes -->
+      <bpmndi:BPMNShape id="Activity_EvaluateProposal_di" bpmnElement="Activity_EvaluateProposal">
+        <dc:Bounds x="1080" y="610" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Timer_ReviewReminder_di" bpmnElement="Event_Timer_ReviewReminder">
+        <dc:Bounds x="1082" y="672" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1011" y="700" width="77" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Timer_SLAEscalation_di" bpmnElement="Event_Timer_SLAEscalation">
+        <dc:Bounds x="1172" y="672" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1198" y="705" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_HoDEscalation_di" bpmnElement="Activity_HoDEscalation">
+        <dc:Bounds x="1260" y="680" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_CommitteeDecision_di" bpmnElement="Gateway_CommitteeDecision" isMarkerVisible="true">
+        <dc:Bounds x="1275" y="625" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1271" y="588" width="57" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_RevisionCycles_di" bpmnElement="Gateway_RevisionCycles" isMarkerVisible="true">
+        <dc:Bounds x="1445" y="625" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1428" y="588" width="85" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Lane: System Shapes -->
+      <bpmndi:BPMNShape id="Activity_ValidateProposal_di" bpmnElement="Activity_ValidateProposal">
+        <dc:Bounds x="320" y="1110" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ValidationOutcome_di" bpmnElement="Gateway_ValidationOutcome" isMarkerVisible="true">
+        <dc:Bounds x="495" y="1125" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="477" y="1182" width="87" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_NotifyInvalidTeam_di" bpmnElement="Activity_NotifyInvalidTeam">
+        <dc:Bounds x="460" y="1220" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_End_InvalidTeam_di" bpmnElement="Event_End_InvalidTeam">
+        <dc:Bounds x="622" y="1242" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="611" y="1285" width="59" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_ReturnErrorList_di" bpmnElement="Activity_ReturnErrorList">
+        <dc:Bounds x="600" y="1110" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_CheckAttempts_di" bpmnElement="Gateway_CheckAttempts" isMarkerVisible="true">
+        <dc:Bounds x="765" y="1125" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="751" y="1182" width="79" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_CheckSimilarity_di" bpmnElement="Activity_CheckSimilarity">
+        <dc:Bounds x="800" y="1110" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_SimilarityOutcome_di" bpmnElement="Gateway_SimilarityOutcome" isMarkerVisible="true">
+        <dc:Bounds x="965" y="1125" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="949" y="1182" width="83" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_SendReviewReminder_di" bpmnElement="Activity_SendReviewReminder">
+        <dc:Bounds x="1040" y="1110" width="120" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_End_ReminderSent_di" bpmnElement="Event_End_ReminderSent">
+        <dc:Bounds x="1082" y="1222" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1057" y="1265" width="86" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_SendRejectionReasons_di" bpmnElement="Activity_SendRejectionReasons">
+        <dc:Bounds x="1410" y="1110" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_AllowNewTopic_di" bpmnElement="Gateway_AllowNewTopic" isMarkerVisible="true">
+        <dc:Bounds x="1575" y="1125" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1556" y="1182" width="88" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_End_Rejected_di" bpmnElement="Event_End_Rejected">
+        <dc:Bounds x="1682" y="1132" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1666" y="1175" width="69" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_MatchGuide_di" bpmnElement="Activity_MatchGuide">
+        <dc:Bounds x="1410" y="990" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_GuideMatchOutcome_di" bpmnElement="Gateway_GuideMatchOutcome" isMarkerVisible="true">
+        <dc:Bounds x="1575" y="1005" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1557" y="1062" width="86" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Lane: Guide SubProcess Shapes -->
+      <bpmndi:BPMNShape id="SubProcess_GuideAllocation_di" bpmnElement="SubProcess_GuideAllocation" isExpanded="true">
+        <dc:Bounds x="1670" y="810" width="480" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SubEvent_Start_di" bpmnElement="SubEvent_Start">
+        <dc:Bounds x="1692" y="892" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_ReserveSlot_di" bpmnElement="Activity_ReserveSlot">
+        <dc:Bounds x="1750" y="870" width="100" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Comp_Slot_di" bpmnElement="Event_Comp_Slot">
+        <dc:Bounds x="1772" y="912" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_ReleaseSlot_di" bpmnElement="Activity_ReleaseSlot">
+        <dc:Bounds x="1750" y="960" width="100" height="40" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_SendAllocationRequest_di" bpmnElement="Activity_SendAllocationRequest">
+        <dc:Bounds x="1870" y="870" width="100" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_GuideRespond_di" bpmnElement="Activity_GuideRespond">
+        <dc:Bounds x="1990" y="870" width="90" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Timer_GuideSilent_di" bpmnElement="Event_Timer_GuideSilent">
+        <dc:Bounds x="2012" y="912" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SubGateway_Decision_di" bpmnElement="SubGateway_Decision" isMarkerVisible="true">
+        <dc:Bounds x="2105" y="875" width="40" height="40" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SubEvent_EndSuccess_di" bpmnElement="SubEvent_EndSuccess">
+        <dc:Bounds x="2182" y="877" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SubEvent_EndDecline_di" bpmnElement="SubEvent_EndDecline">
+        <dc:Bounds x="2182" y="942" width="36" height="36" />
+      </bpmndi:BPMNShape>
+
+      <!-- SubProcess Boundary & Guide Retry Elements -->
+      <bpmndi:BPMNShape id="Event_Error_GuideDecline_di" bpmnElement="Event_Error_GuideDecline">
+        <dc:Bounds x="1832" y="992" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1806" y="1035" width="89" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_GuideDeclineAttempts_di" bpmnElement="Gateway_GuideDeclineAttempts" isMarkerVisible="true">
+        <dc:Bounds x="1715" y="1035" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1703" y="1092" width="75" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Message_Withdrawal_di" bpmnElement="Event_Message_Withdrawal">
+        <dc:Bounds x="2042" y="792" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2016" y="755" width="89" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Throw_CompensateSlot_di" bpmnElement="Event_Throw_CompensateSlot">
+        <dc:Bounds x="2122" y="752" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2097" y="715" width="86" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_End_Withdrawn_di" bpmnElement="Event_End_Withdrawn">
+        <dc:Bounds x="2212" y="752" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2198" y="795" width="65" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Final Notification & Completion -->
+      <bpmndi:BPMNShape id="Activity_NotifyStudentAndRecord_di" bpmnElement="Activity_NotifyStudentAndRecord">
+        <dc:Bounds x="2020" y="1110" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_Error_NotificationFailure_di" bpmnElement="Event_Error_NotificationFailure">
+        <dc:Bounds x="2082" y="1092" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2108" y="1070" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_End_Allocated_di" bpmnElement="Event_End_Allocated">
+        <dc:Bounds x="2222" y="1132" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2200" y="1175" width="80" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+
+      <!-- Sequence Flow Edges with exact waypoints -->
+      <bpmndi:BPMNEdge id="Flow_Start_To_Submit_di" bpmnElement="Flow_Start_To_Submit">
+        <di:waypoint x="268" y="180" />
+        <di:waypoint x="320" y="180" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Submit_To_Validate_di" bpmnElement="Flow_Submit_To_Validate">
+        <di:waypoint x="380" y="220" />
+        <di:waypoint x="380" y="1110" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Deadline_To_Coordinator_di" bpmnElement="Flow_Deadline_To_Coordinator">
+        <di:waypoint x="420" y="238" />
+        <di:waypoint x="420" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_LateDecision_di" bpmnElement="Flow_To_LateDecision">
+        <di:waypoint x="480" y="420" />
+        <di:waypoint x="515" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Late_Approved_di" bpmnElement="Flow_Late_Approved">
+        <di:waypoint x="540" y="395" />
+        <di:waypoint x="540" y="180" />
+        <di:waypoint x="440" y="180" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="546" y="280" width="67" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Late_Rejected_di" bpmnElement="Flow_Late_Rejected">
+        <di:waypoint x="565" y="420" />
+        <di:waypoint x="620" y="420" />
+        <di:waypoint x="620" y="198" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="566" y="402" width="56" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_ValidationOutcome_di" bpmnElement="Flow_To_ValidationOutcome">
+        <di:waypoint x="440" y="1150" />
+        <di:waypoint x="495" y="1150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Validation_Passed_di" bpmnElement="Flow_Validation_Passed">
+        <di:waypoint x="520" y="1125" />
+        <di:waypoint x="520" y="420" />
+        <di:waypoint x="800" y="420" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="527" y="1070" width="25" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Validation_TeamError_di" bpmnElement="Flow_Validation_TeamError">
+        <di:waypoint x="520" y="1175" />
+        <di:waypoint x="520" y="1220" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="526" y="1185" width="87" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_InvalidTeamEnd_di" bpmnElement="Flow_To_InvalidTeamEnd">
+        <di:waypoint x="580" y="1260" />
+        <di:waypoint x="622" y="1260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Validation_FormErrors_di" bpmnElement="Flow_Validation_FormErrors">
+        <di:waypoint x="545" y="1150" />
+        <di:waypoint x="600" y="1150" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="536" y="1116" width="79" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_CheckAttempts_di" bpmnElement="Flow_To_CheckAttempts">
+        <di:waypoint x="720" y="1150" />
+        <di:waypoint x="765" y="1150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Attempts_UnderLimit_di" bpmnElement="Flow_Attempts_UnderLimit">
+        <di:waypoint x="790" y="1125" />
+        <di:waypoint x="790" y="180" />
+        <di:waypoint x="760" y="180" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="794" y="240" width="71" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Resubmit_To_Validate_di" bpmnElement="Flow_Resubmit_To_Validate">
+        <di:waypoint x="700" y="220" />
+        <di:waypoint x="700" y="1080" />
+        <di:waypoint x="410" y="1080" />
+        <di:waypoint x="410" y="1110" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Attempts_OverLimit_di" bpmnElement="Flow_Attempts_OverLimit">
+        <di:waypoint x="790" y="1125" />
+        <di:waypoint x="790" y="420" />
+        <di:waypoint x="760" y="420" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="793" y="460" width="73" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Escalation_Resolved_di" bpmnElement="Flow_Escalation_Resolved">
+        <di:waypoint x="700" y="380" />
+        <di:waypoint x="700" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Screen_To_Similarity_di" bpmnElement="Flow_Screen_To_Similarity">
+        <di:waypoint x="860" y="460" />
+        <di:waypoint x="860" y="1110" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_SimilarityOutcome_di" bpmnElement="Flow_To_SimilarityOutcome">
+        <di:waypoint x="920" y="1150" />
+        <di:waypoint x="965" y="1150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Similarity_Passed_di" bpmnElement="Flow_Similarity_Passed">
+        <di:waypoint x="990" y="1125" />
+        <di:waypoint x="990" y="650" />
+        <di:waypoint x="1080" y="650" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="996" y="870" width="37" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Similarity_Flagged_di" bpmnElement="Flow_Similarity_Flagged">
+        <di:waypoint x="990" y="1125" />
+        <di:waypoint x="990" y="460" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="993" y="520" width="73" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_DuplicateDecision_di" bpmnElement="Flow_To_DuplicateDecision">
+        <di:waypoint x="1080" y="420" />
+        <di:waypoint x="1125" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Duplicate_Modify_di" bpmnElement="Flow_Duplicate_Modify">
+        <di:waypoint x="1150" y="395" />
+        <di:waypoint x="1150" y="180" />
+        <di:waypoint x="440" y="180" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1153" y="270" width="74" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Duplicate_Reject_di" bpmnElement="Flow_Duplicate_Reject">
+        <di:waypoint x="1175" y="420" />
+        <di:waypoint x="1232" y="420" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1165" y="402" width="81" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_SendReminder_di" bpmnElement="Flow_To_SendReminder">
+        <di:waypoint x="1100" y="708" />
+        <di:waypoint x="1100" y="1110" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_ReminderEnd_di" bpmnElement="Flow_To_ReminderEnd">
+        <di:waypoint x="1100" y="1190" />
+        <di:waypoint x="1100" y="1222" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_HoDEscalation_di" bpmnElement="Flow_To_HoDEscalation">
+        <di:waypoint x="1208" y="690" />
+        <di:waypoint x="1260" y="690" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_HoD_To_Evaluate_di" bpmnElement="Flow_HoD_To_Evaluate">
+        <di:waypoint x="1260" y="720" />
+        <di:waypoint x="1145" y="720" />
+        <di:waypoint x="1145" y="690" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Evaluate_To_Decision_di" bpmnElement="Flow_Evaluate_To_Decision">
+        <di:waypoint x="1210" y="650" />
+        <di:waypoint x="1275" y="650" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Committee_Approved_di" bpmnElement="Flow_Committee_Approved">
+        <di:waypoint x="1325" y="650" />
+        <di:waypoint x="1360" y="650" />
+        <di:waypoint x="1360" y="1030" />
+        <di:waypoint x="1410" y="1030" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1366" y="780" width="47" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Committee_Revise_di" bpmnElement="Flow_Committee_Revise">
+        <di:waypoint x="1300" y="625" />
+        <di:waypoint x="1300" y="220" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1301" y="320" width="58" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Revise_To_CycleCheck_di" bpmnElement="Flow_Revise_To_CycleCheck">
+        <di:waypoint x="1390" y="180" />
+        <di:waypoint x="1470" y="180" />
+        <di:waypoint x="1470" y="625" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Cycle_Allowed_di" bpmnElement="Flow_Cycle_Allowed">
+        <di:waypoint x="1445" y="650" />
+        <di:waypoint x="1210" y="650" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1320" y="632" width="60" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Cycle_Exceeded_di" bpmnElement="Flow_Cycle_Exceeded">
+        <di:waypoint x="1470" y="675" />
+        <di:waypoint x="1470" y="1110" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1477" y="780" width="65" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Committee_Rejected_di" bpmnElement="Flow_Committee_Rejected">
+        <di:waypoint x="1300" y="675" />
+        <di:waypoint x="1300" y="1150" />
+        <di:waypoint x="1410" y="1150" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1306" y="890" width="68" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_AllowNewTopic_di" bpmnElement="Flow_To_AllowNewTopic">
+        <di:waypoint x="1540" y="1150" />
+        <di:waypoint x="1575" y="1150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_NewTopic_Yes_di" bpmnElement="Flow_NewTopic_Yes">
+        <di:waypoint x="1600" y="1125" />
+        <di:waypoint x="1600" y="180" />
+        <di:waypoint x="440" y="180" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1607" y="320" width="76" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_NewTopic_No_di" bpmnElement="Flow_NewTopic_No">
+        <di:waypoint x="1625" y="1150" />
+        <di:waypoint x="1682" y="1150" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1646" y="1132" width="15" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_GuideMatchOutcome_di" bpmnElement="Flow_To_GuideMatchOutcome">
+        <di:waypoint x="1540" y="1030" />
+        <di:waypoint x="1575" y="1030" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_GuideMatch_Found_di" bpmnElement="Flow_GuideMatch_Found">
+        <di:waypoint x="1625" y="1030" />
+        <di:waypoint x="1650" y="1030" />
+        <di:waypoint x="1650" y="910" />
+        <di:waypoint x="1670" y="910" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1651" y="943" width="78" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_GuideMatch_None_di" bpmnElement="Flow_GuideMatch_None">
+        <di:waypoint x="1600" y="1005" />
+        <di:waypoint x="1600" y="420" />
+        <di:waypoint x="1800" y="420" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1605" y="560" width="51" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Manual_To_Notify_di" bpmnElement="Flow_Manual_To_Notify">
+        <di:waypoint x="1930" y="420" />
+        <di:waypoint x="1980" y="420" />
+        <di:waypoint x="1980" y="1150" />
+        <di:waypoint x="2020" y="1150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AllocSub_To_Notify_di" bpmnElement="Flow_AllocSub_To_Notify">
+        <di:waypoint x="1910" y="1010" />
+        <di:waypoint x="1910" y="1150" />
+        <di:waypoint x="2020" y="1150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_GuideDeclineCheck_di" bpmnElement="Flow_To_GuideDeclineCheck">
+        <di:waypoint x="1850" y="1028" />
+        <di:waypoint x="1850" y="1060" />
+        <di:waypoint x="1765" y="1060" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Decline_Retry_di" bpmnElement="Flow_Decline_Retry">
+        <di:waypoint x="1740" y="1035" />
+        <di:waypoint x="1740" y="960" />
+        <di:waypoint x="1475" y="960" />
+        <di:waypoint x="1475" y="990" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1576" y="942" width="66" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Guide_MaxRetries_di" bpmnElement="Flow_Guide_MaxRetries">
+        <di:waypoint x="1740" y="1085" />
+        <di:waypoint x="1740" y="1100" />
+        <di:waypoint x="1865" y="1100" />
+        <di:waypoint x="1865" y="460" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1762" y="1082" width="73" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_CompensationThrow_di" bpmnElement="Flow_To_CompensationThrow">
+        <di:waypoint x="2060" y="792" />
+        <di:waypoint x="2060" y="770" />
+        <di:waypoint x="2122" y="770" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_To_WithdrawnEnd_di" bpmnElement="Flow_To_WithdrawnEnd">
+        <di:waypoint x="2158" y="770" />
+        <di:waypoint x="2212" y="770" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Notify_To_End_di" bpmnElement="Flow_Notify_To_End">
+        <di:waypoint x="2150" y="1150" />
+        <di:waypoint x="2222" y="1150" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Notification_Fallback_di" bpmnElement="Flow_Notification_Fallback">
+        <di:waypoint x="2100" y="1092" />
+        <di:waypoint x="2100" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ManualNotify_To_End_di" bpmnElement="Flow_ManualNotify_To_End">
+        <di:waypoint x="2150" y="420" />
+        <di:waypoint x="2240" y="420" />
+        <di:waypoint x="2240" y="1132" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
