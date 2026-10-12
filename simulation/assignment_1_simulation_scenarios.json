@@ -1,0 +1,423 @@
+{
+  "assignment": "Assignment 1: Student Project Approval & Allocation System",
+  "processId": "Process_StudentProjectAllocation",
+  "scenarios": [
+    {
+      "id": "A1_SCENARIO_01_HAPPY_PATH",
+      "name": "Happy Path: Seamless Approval & Guide Allocation",
+      "description": "Valid team and form, low similarity (<25%), committee approves, guide matches on domain, guide accepts within 3 days, and student is notified.",
+      "initialVariables": {
+        "projectTitle": "Autonomous Drone Fleet Coordination",
+        "teamMembers": [
+          "CS201",
+          "CS202",
+          "CS203"
+        ],
+        "teamSize": 3,
+        "domain": "Artificial Intelligence & Robotics",
+        "abstractText": "This project investigates multi-agent reinforcement learning for autonomous drone fleet navigation and collision avoidance in GPS-denied environments.",
+        "lateSubmission": false
+      },
+      "taskDecisions": [
+        {
+          "task": "Activity_ValidateProposal",
+          "output": {
+            "validationStatus": "VALID"
+          }
+        },
+        {
+          "task": "Activity_ScreenProposal",
+          "output": {
+            "screenPassed": true
+          }
+        },
+        {
+          "task": "Activity_CheckSimilarity",
+          "output": {
+            "similarityScore": 12.5
+          }
+        },
+        {
+          "task": "Activity_EvaluateProposal",
+          "output": {
+            "committeeDecision": "APPROVED"
+          }
+        },
+        {
+          "task": "Activity_MatchGuide",
+          "output": {
+            "guideMatchFound": true,
+            "allocatedGuideId": "PROF_ALAN_TURING",
+            "guideCapacityAvailable": true
+          }
+        },
+        {
+          "task": "Activity_ReserveSlot",
+          "output": {
+            "slotReserved": true
+          }
+        },
+        {
+          "task": "Activity_GuideRespond",
+          "output": {
+            "guideResponse": "ACCEPT"
+          }
+        },
+        {
+          "task": "Activity_NotifyStudentAndRecord",
+          "output": {
+            "studentNotified": true,
+            "recordSaved": true
+          }
+        }
+      ],
+      "expectedEndEvent": "Event_End_Allocated"
+    },
+    {
+      "id": "A1_SCENARIO_02_FORM_ERRORS_RESUBMIT",
+      "name": "Exception Path F1: Form Validation Errors with Resubmission",
+      "description": "Submission contains missing abstract; system returns error list; team resubmits successfully within attempt cap (attempt 1 <= 2).",
+      "initialVariables": {
+        "projectTitle": "Smart Traffic Signal Controller",
+        "teamMembers": [
+          "CS105",
+          "CS106"
+        ],
+        "teamSize": 2,
+        "abstractText": ""
+      },
+      "taskDecisions": [
+        {
+          "task": "Activity_ValidateProposal",
+          "attempt": 1,
+          "output": {
+            "validationStatus": "FORM_ERRORS",
+            "resubmitAttempts": 1
+          }
+        },
+        {
+          "task": "Activity_ReturnErrorList",
+          "output": {
+            "errors": [
+              "Abstract cannot be empty",
+              "Team size below minimum of 3"
+            ]
+          }
+        },
+        {
+          "task": "Activity_ResubmitProposal",
+          "output": {
+            "abstractText": "Updated full abstract text...",
+            "teamSize": 3,
+            "teamMembers": [
+              "CS105",
+              "CS106",
+              "CS107"
+            ]
+          }
+        },
+        {
+          "task": "Activity_ValidateProposal",
+          "attempt": 2,
+          "output": {
+            "validationStatus": "VALID"
+          }
+        },
+        {
+          "task": "Activity_ScreenProposal",
+          "output": {
+            "screenPassed": true
+          }
+        },
+        {
+          "task": "Activity_CheckSimilarity",
+          "output": {
+            "similarityScore": 8.0
+          }
+        },
+        {
+          "task": "Activity_EvaluateProposal",
+          "output": {
+            "committeeDecision": "APPROVED"
+          }
+        },
+        {
+          "task": "Activity_MatchGuide",
+          "output": {
+            "guideMatchFound": true,
+            "allocatedGuideId": "PROF_ADA_LOVELACE"
+          }
+        },
+        {
+          "task": "Activity_GuideRespond",
+          "output": {
+            "guideResponse": "ACCEPT"
+          }
+        },
+        {
+          "task": "Activity_NotifyStudentAndRecord",
+          "output": {
+            "studentNotified": true
+          }
+        }
+      ],
+      "expectedEndEvent": "Event_End_Allocated"
+    },
+    {
+      "id": "A1_SCENARIO_03_INVALID_TEAM_RULE",
+      "name": "Exception Path F2: Invalid Team Rules Violation",
+      "description": "Student belongs to multiple teams; system flags breach and terminates immediately at Error End Event.",
+      "initialVariables": {
+        "projectTitle": "Blockchain Identity Vault",
+        "teamMembers": [
+          "CS201",
+          "CS999"
+        ],
+        "teamSize": 2
+      },
+      "taskDecisions": [
+        {
+          "task": "Activity_ValidateProposal",
+          "output": {
+            "validationStatus": "INVALID_TEAM"
+          }
+        },
+        {
+          "task": "Activity_NotifyInvalidTeam",
+          "output": {
+            "studentNotified": true,
+            "reason": "Student CS201 already registered in team #14"
+          }
+        }
+      ],
+      "expectedEndEvent": "Event_End_InvalidTeam"
+    },
+    {
+      "id": "A1_SCENARIO_04_DUPLICATE_TOPIC_REVISE",
+      "name": "Exception Path F3: Plagiarism / High Similarity",
+      "description": "Similarity score is 45% (>25%); coordinator reviews match and requests topic modification.",
+      "initialVariables": {
+        "projectTitle": "Hospital Management Web Portal",
+        "teamMembers": [
+          "CS301",
+          "CS302",
+          "CS303"
+        ]
+      },
+      "taskDecisions": [
+        {
+          "task": "Activity_ValidateProposal",
+          "output": {
+            "validationStatus": "VALID"
+          }
+        },
+        {
+          "task": "Activity_ScreenProposal",
+          "output": {
+            "screenPassed": true
+          }
+        },
+        {
+          "task": "Activity_CheckSimilarity",
+          "output": {
+            "similarityScore": 45.0
+          }
+        },
+        {
+          "task": "Activity_ReviewDuplicate",
+          "output": {
+            "duplicateResolution": "MODIFY",
+            "feedback": "Shift focus to telemedicine and HL7 integration"
+          }
+        },
+        {
+          "task": "Activity_SubmitProposal",
+          "output": {
+            "projectTitle": "Telemedicine & HL7 EHR Integration Platform"
+          }
+        },
+        {
+          "task": "Activity_ValidateProposal",
+          "output": {
+            "validationStatus": "VALID"
+          }
+        },
+        {
+          "task": "Activity_ScreenProposal",
+          "output": {
+            "screenPassed": true
+          }
+        },
+        {
+          "task": "Activity_CheckSimilarity",
+          "output": {
+            "similarityScore": 14.0
+          }
+        },
+        {
+          "task": "Activity_EvaluateProposal",
+          "output": {
+            "committeeDecision": "APPROVED"
+          }
+        },
+        {
+          "task": "Activity_MatchGuide",
+          "output": {
+            "guideMatchFound": true,
+            "allocatedGuideId": "PROF_CLAUDE_SHANNON"
+          }
+        },
+        {
+          "task": "Activity_GuideRespond",
+          "output": {
+            "guideResponse": "ACCEPT"
+          }
+        },
+        {
+          "task": "Activity_NotifyStudentAndRecord",
+          "output": {
+            "studentNotified": true
+          }
+        }
+      ],
+      "expectedEndEvent": "Event_End_Allocated"
+    },
+    {
+      "id": "A1_SCENARIO_05_COMMITTEE_REVISION",
+      "name": "Exception Path F5: Committee Revision Loop",
+      "description": "Committee requests scope refinement; team revises within 7 days (cycle 1 <= 2) and gets approved.",
+      "initialVariables": {
+        "projectTitle": "Quantum Cryptography Simulator"
+      },
+      "taskDecisions": [
+        {
+          "task": "Activity_ValidateProposal",
+          "output": {
+            "validationStatus": "VALID"
+          }
+        },
+        {
+          "task": "Activity_ScreenProposal",
+          "output": {
+            "screenPassed": true
+          }
+        },
+        {
+          "task": "Activity_CheckSimilarity",
+          "output": {
+            "similarityScore": 10.0
+          }
+        },
+        {
+          "task": "Activity_EvaluateProposal",
+          "cycle": 1,
+          "output": {
+            "committeeDecision": "REVISE"
+          }
+        },
+        {
+          "task": "Activity_ReviseProposal",
+          "output": {
+            "revisionCycles": 1,
+            "updatedScope": "Constrained to BB84 protocol simulation"
+          }
+        },
+        {
+          "task": "Activity_EvaluateProposal",
+          "cycle": 2,
+          "output": {
+            "committeeDecision": "APPROVED"
+          }
+        },
+        {
+          "task": "Activity_MatchGuide",
+          "output": {
+            "guideMatchFound": true
+          }
+        },
+        {
+          "task": "Activity_GuideRespond",
+          "output": {
+            "guideResponse": "ACCEPT"
+          }
+        },
+        {
+          "task": "Activity_NotifyStudentAndRecord",
+          "output": {
+            "studentNotified": true
+          }
+        }
+      ],
+      "expectedEndEvent": "Event_End_Allocated"
+    },
+    {
+      "id": "A1_SCENARIO_06_GUIDE_DECLINE_AND_RETRY",
+      "name": "Exception Path F9: Guide Declines & System Reruns Match",
+      "description": "First guide declines due to overload; system re-evaluates match (retry 1 < 3) and second guide accepts.",
+      "initialVariables": {
+        "projectTitle": "Neural Speech Synthesis for Low-Resource Languages"
+      },
+      "taskDecisions": [
+        {
+          "task": "Activity_ValidateProposal",
+          "output": {
+            "validationStatus": "VALID"
+          }
+        },
+        {
+          "task": "Activity_ScreenProposal",
+          "output": {
+            "screenPassed": true
+          }
+        },
+        {
+          "task": "Activity_CheckSimilarity",
+          "output": {
+            "similarityScore": 5.0
+          }
+        },
+        {
+          "task": "Activity_EvaluateProposal",
+          "output": {
+            "committeeDecision": "APPROVED"
+          }
+        },
+        {
+          "task": "Activity_MatchGuide",
+          "output": {
+            "guideMatchFound": true,
+            "allocatedGuideId": "PROF_GUIDE_1"
+          }
+        },
+        {
+          "task": "Activity_GuideRespond",
+          "output": {
+            "guideResponse": "DECLINE",
+            "guideDeclineAttempts": 1
+          }
+        },
+        {
+          "task": "Activity_MatchGuide",
+          "retry": 1,
+          "output": {
+            "guideMatchFound": true,
+            "allocatedGuideId": "PROF_GUIDE_2"
+          }
+        },
+        {
+          "task": "Activity_GuideRespond",
+          "output": {
+            "guideResponse": "ACCEPT"
+          }
+        },
+        {
+          "task": "Activity_NotifyStudentAndRecord",
+          "output": {
+            "studentNotified": true
+          }
+        }
+      ],
+      "expectedEndEvent": "Event_End_Allocated"
+    }
+  ]
+}

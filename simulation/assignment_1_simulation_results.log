@@ -1,0 +1,265 @@
+=== STARTING CAMUNDA 8 SIMULATION: [A1_SCENARIO_01_HAPPY_PATH] Happy Path: Seamless Approval & Guide Allocation ===
+Initial Process Payload: {
+  "projectTitle": "Autonomous Drone Fleet Coordination",
+  "teamMembers": [
+    "CS201",
+    "CS202",
+    "CS203"
+  ],
+  "teamSize": 3,
+  "domain": "Artificial Intelligence & Robotics",
+  "abstractText": "This project investigates multi-agent reinforcement learning for autonomous drone fleet navigation and collision avoidance in GPS-denied environments.",
+  "lateSubmission": false
+}
+[+] EXECUTING serviceTask: [Validate Form Completeness & Team Rules]
+    Variables Updated: {"validationStatus": "VALID"}
+[+] EXECUTING userTask: [Coordinator Screens Proposal]
+    Variables Updated: {"screenPassed": true}
+[+] EXECUTING serviceTask: [Run Similarity / Duplicate-Topic Check]
+    Variables Updated: {"similarityScore": 12.5}
+[+] EXECUTING userTask: [Review Committee Evaluates Proposal]
+    Variables Updated: {"committeeDecision": "APPROVED"}
+[+] EXECUTING businessRuleTask: [Check Guide Availability & Workload (F8)]
+    Variables Updated: {"guideMatchFound": true, "allocatedGuideId": "PROF_ALAN_TURING", "guideCapacityAvailable": true}
+[+] EXECUTING serviceTask: [Reserve Guide Quota Slot]
+    Variables Updated: {"slotReserved": true}
+[+] EXECUTING userTask: [Guide Reviews Request (Accept / Decline)]
+    Variables Updated: {"guideResponse": "ACCEPT"}
+[+] EXECUTING sendTask: [Notify Student & Record Allocation in System]
+    Variables Updated: {"studentNotified": true, "recordSaved": true}
+[✓] COMPLETED AT END EVENT: [Event_End_Allocated] End (Project Allocated & Confirmed)
+Final State Variables: {
+  "projectTitle": "Autonomous Drone Fleet Coordination",
+  "teamMembers": [
+    "CS201",
+    "CS202",
+    "CS203"
+  ],
+  "teamSize": 3,
+  "domain": "Artificial Intelligence & Robotics",
+  "abstractText": "This project investigates multi-agent reinforcement learning for autonomous drone fleet navigation and collision avoidance in GPS-denied environments.",
+  "lateSubmission": false,
+  "validationStatus": "VALID",
+  "screenPassed": true,
+  "similarityScore": 12.5,
+  "committeeDecision": "APPROVED",
+  "guideMatchFound": true,
+  "allocatedGuideId": "PROF_ALAN_TURING",
+  "guideCapacityAvailable": true,
+  "slotReserved": true,
+  "guideResponse": "ACCEPT",
+  "studentNotified": true,
+  "recordSaved": true
+}
+=== SCENARIO EXECUTION FINISHED: STATUS SUCCESS ===
+
+=== STARTING CAMUNDA 8 SIMULATION: [A1_SCENARIO_02_FORM_ERRORS_RESUBMIT] Exception Path F1: Form Validation Errors with Resubmission ===
+Initial Process Payload: {
+  "projectTitle": "Smart Traffic Signal Controller",
+  "teamMembers": [
+    "CS105",
+    "CS106"
+  ],
+  "teamSize": 2,
+  "abstractText": ""
+}
+[+] EXECUTING serviceTask: [Validate Form Completeness & Team Rules]
+    Variables Updated: {"validationStatus": "FORM_ERRORS", "resubmitAttempts": 1}
+[+] EXECUTING serviceTask: [Return Error List (F1)]
+    Variables Updated: {"errors": ["Abstract cannot be empty", "Team size below minimum of 3"]}
+[+] EXECUTING userTask: [Resubmit Corrected Proposal]
+    Variables Updated: {"abstractText": "Updated full abstract text...", "teamSize": 3, "teamMembers": ["CS105", "CS106", "CS107"]}
+[+] EXECUTING serviceTask: [Validate Form Completeness & Team Rules]
+    Variables Updated: {"validationStatus": "VALID"}
+[+] EXECUTING userTask: [Coordinator Screens Proposal]
+    Variables Updated: {"screenPassed": true}
+[+] EXECUTING serviceTask: [Run Similarity / Duplicate-Topic Check]
+    Variables Updated: {"similarityScore": 8.0}
+[+] EXECUTING userTask: [Review Committee Evaluates Proposal]
+    Variables Updated: {"committeeDecision": "APPROVED"}
+[+] EXECUTING businessRuleTask: [Check Guide Availability & Workload (F8)]
+    Variables Updated: {"guideMatchFound": true, "allocatedGuideId": "PROF_ADA_LOVELACE"}
+[+] EXECUTING userTask: [Guide Reviews Request (Accept / Decline)]
+    Variables Updated: {"guideResponse": "ACCEPT"}
+[+] EXECUTING sendTask: [Notify Student & Record Allocation in System]
+    Variables Updated: {"studentNotified": true}
+[✓] COMPLETED AT END EVENT: [Event_End_Allocated] End (Project Allocated & Confirmed)
+Final State Variables: {
+  "projectTitle": "Smart Traffic Signal Controller",
+  "teamMembers": [
+    "CS105",
+    "CS106",
+    "CS107"
+  ],
+  "teamSize": 3,
+  "abstractText": "Updated full abstract text...",
+  "validationStatus": "VALID",
+  "resubmitAttempts": 1,
+  "errors": [
+    "Abstract cannot be empty",
+    "Team size below minimum of 3"
+  ],
+  "screenPassed": true,
+  "similarityScore": 8.0,
+  "committeeDecision": "APPROVED",
+  "guideMatchFound": true,
+  "allocatedGuideId": "PROF_ADA_LOVELACE",
+  "guideResponse": "ACCEPT",
+  "studentNotified": true
+}
+=== SCENARIO EXECUTION FINISHED: STATUS SUCCESS ===
+
+=== STARTING CAMUNDA 8 SIMULATION: [A1_SCENARIO_03_INVALID_TEAM_RULE] Exception Path F2: Invalid Team Rules Violation ===
+Initial Process Payload: {
+  "projectTitle": "Blockchain Identity Vault",
+  "teamMembers": [
+    "CS201",
+    "CS999"
+  ],
+  "teamSize": 2
+}
+[+] EXECUTING serviceTask: [Validate Form Completeness & Team Rules]
+    Variables Updated: {"validationStatus": "INVALID_TEAM"}
+[+] EXECUTING serviceTask: [Notify Team Rule Violation (F2)]
+    Variables Updated: {"studentNotified": true, "reason": "Student CS201 already registered in team #14"}
+[✓] COMPLETED AT END EVENT: [Event_End_InvalidTeam] End (Invalid Team)
+Final State Variables: {
+  "projectTitle": "Blockchain Identity Vault",
+  "teamMembers": [
+    "CS201",
+    "CS999"
+  ],
+  "teamSize": 2,
+  "validationStatus": "INVALID_TEAM",
+  "studentNotified": true,
+  "reason": "Student CS201 already registered in team #14"
+}
+=== SCENARIO EXECUTION FINISHED: STATUS SUCCESS ===
+
+=== STARTING CAMUNDA 8 SIMULATION: [A1_SCENARIO_04_DUPLICATE_TOPIC_REVISE] Exception Path F3: Plagiarism / High Similarity ===
+Initial Process Payload: {
+  "projectTitle": "Hospital Management Web Portal",
+  "teamMembers": [
+    "CS301",
+    "CS302",
+    "CS303"
+  ]
+}
+[+] EXECUTING serviceTask: [Validate Form Completeness & Team Rules]
+    Variables Updated: {"validationStatus": "VALID"}
+[+] EXECUTING userTask: [Coordinator Screens Proposal]
+    Variables Updated: {"screenPassed": true}
+[+] EXECUTING serviceTask: [Run Similarity / Duplicate-Topic Check]
+    Variables Updated: {"similarityScore": 45.0}
+[+] EXECUTING userTask: [Review Duplicate Match (F3)]
+    Variables Updated: {"duplicateResolution": "MODIFY", "feedback": "Shift focus to telemedicine and HL7 integration"}
+[+] EXECUTING userTask: [Submit Project Proposal]
+    Variables Updated: {"projectTitle": "Telemedicine & HL7 EHR Integration Platform"}
+[+] EXECUTING serviceTask: [Validate Form Completeness & Team Rules]
+    Variables Updated: {"validationStatus": "VALID"}
+[+] EXECUTING userTask: [Coordinator Screens Proposal]
+    Variables Updated: {"screenPassed": true}
+[+] EXECUTING serviceTask: [Run Similarity / Duplicate-Topic Check]
+    Variables Updated: {"similarityScore": 14.0}
+[+] EXECUTING userTask: [Review Committee Evaluates Proposal]
+    Variables Updated: {"committeeDecision": "APPROVED"}
+[+] EXECUTING businessRuleTask: [Check Guide Availability & Workload (F8)]
+    Variables Updated: {"guideMatchFound": true, "allocatedGuideId": "PROF_CLAUDE_SHANNON"}
+[+] EXECUTING userTask: [Guide Reviews Request (Accept / Decline)]
+    Variables Updated: {"guideResponse": "ACCEPT"}
+[+] EXECUTING sendTask: [Notify Student & Record Allocation in System]
+    Variables Updated: {"studentNotified": true}
+[✓] COMPLETED AT END EVENT: [Event_End_Allocated] End (Project Allocated & Confirmed)
+Final State Variables: {
+  "projectTitle": "Telemedicine & HL7 EHR Integration Platform",
+  "teamMembers": [
+    "CS301",
+    "CS302",
+    "CS303"
+  ],
+  "validationStatus": "VALID",
+  "screenPassed": true,
+  "similarityScore": 14.0,
+  "duplicateResolution": "MODIFY",
+  "feedback": "Shift focus to telemedicine and HL7 integration",
+  "committeeDecision": "APPROVED",
+  "guideMatchFound": true,
+  "allocatedGuideId": "PROF_CLAUDE_SHANNON",
+  "guideResponse": "ACCEPT",
+  "studentNotified": true
+}
+=== SCENARIO EXECUTION FINISHED: STATUS SUCCESS ===
+
+=== STARTING CAMUNDA 8 SIMULATION: [A1_SCENARIO_05_COMMITTEE_REVISION] Exception Path F5: Committee Revision Loop ===
+Initial Process Payload: {
+  "projectTitle": "Quantum Cryptography Simulator"
+}
+[+] EXECUTING serviceTask: [Validate Form Completeness & Team Rules]
+    Variables Updated: {"validationStatus": "VALID"}
+[+] EXECUTING userTask: [Coordinator Screens Proposal]
+    Variables Updated: {"screenPassed": true}
+[+] EXECUTING serviceTask: [Run Similarity / Duplicate-Topic Check]
+    Variables Updated: {"similarityScore": 10.0}
+[+] EXECUTING userTask: [Review Committee Evaluates Proposal]
+    Variables Updated: {"committeeDecision": "REVISE"}
+[+] EXECUTING userTask: [Revise Proposal within 7-Day Window (F5)]
+    Variables Updated: {"revisionCycles": 1, "updatedScope": "Constrained to BB84 protocol simulation"}
+[+] EXECUTING userTask: [Review Committee Evaluates Proposal]
+    Variables Updated: {"committeeDecision": "APPROVED"}
+[+] EXECUTING businessRuleTask: [Check Guide Availability & Workload (F8)]
+    Variables Updated: {"guideMatchFound": true}
+[+] EXECUTING userTask: [Guide Reviews Request (Accept / Decline)]
+    Variables Updated: {"guideResponse": "ACCEPT"}
+[+] EXECUTING sendTask: [Notify Student & Record Allocation in System]
+    Variables Updated: {"studentNotified": true}
+[✓] COMPLETED AT END EVENT: [Event_End_Allocated] End (Project Allocated & Confirmed)
+Final State Variables: {
+  "projectTitle": "Quantum Cryptography Simulator",
+  "validationStatus": "VALID",
+  "screenPassed": true,
+  "similarityScore": 10.0,
+  "committeeDecision": "APPROVED",
+  "revisionCycles": 1,
+  "updatedScope": "Constrained to BB84 protocol simulation",
+  "guideMatchFound": true,
+  "guideResponse": "ACCEPT",
+  "studentNotified": true
+}
+=== SCENARIO EXECUTION FINISHED: STATUS SUCCESS ===
+
+=== STARTING CAMUNDA 8 SIMULATION: [A1_SCENARIO_06_GUIDE_DECLINE_AND_RETRY] Exception Path F9: Guide Declines & System Reruns Match ===
+Initial Process Payload: {
+  "projectTitle": "Neural Speech Synthesis for Low-Resource Languages"
+}
+[+] EXECUTING serviceTask: [Validate Form Completeness & Team Rules]
+    Variables Updated: {"validationStatus": "VALID"}
+[+] EXECUTING userTask: [Coordinator Screens Proposal]
+    Variables Updated: {"screenPassed": true}
+[+] EXECUTING serviceTask: [Run Similarity / Duplicate-Topic Check]
+    Variables Updated: {"similarityScore": 5.0}
+[+] EXECUTING userTask: [Review Committee Evaluates Proposal]
+    Variables Updated: {"committeeDecision": "APPROVED"}
+[+] EXECUTING businessRuleTask: [Check Guide Availability & Workload (F8)]
+    Variables Updated: {"guideMatchFound": true, "allocatedGuideId": "PROF_GUIDE_1"}
+[+] EXECUTING userTask: [Guide Reviews Request (Accept / Decline)]
+    Variables Updated: {"guideResponse": "DECLINE", "guideDeclineAttempts": 1}
+[+] EXECUTING businessRuleTask: [Check Guide Availability & Workload (F8)]
+    Variables Updated: {"guideMatchFound": true, "allocatedGuideId": "PROF_GUIDE_2"}
+[+] EXECUTING userTask: [Guide Reviews Request (Accept / Decline)]
+    Variables Updated: {"guideResponse": "ACCEPT"}
+[+] EXECUTING sendTask: [Notify Student & Record Allocation in System]
+    Variables Updated: {"studentNotified": true}
+[✓] COMPLETED AT END EVENT: [Event_End_Allocated] End (Project Allocated & Confirmed)
+Final State Variables: {
+  "projectTitle": "Neural Speech Synthesis for Low-Resource Languages",
+  "validationStatus": "VALID",
+  "screenPassed": true,
+  "similarityScore": 5.0,
+  "committeeDecision": "APPROVED",
+  "guideMatchFound": true,
+  "allocatedGuideId": "PROF_GUIDE_2",
+  "guideResponse": "ACCEPT",
+  "guideDeclineAttempts": 1,
+  "studentNotified": true
+}
+=== SCENARIO EXECUTION FINISHED: STATUS SUCCESS ===

@@ -1,0 +1,552 @@
+{
+  "assignment": "Assignment 3: Loan Origination & Approval System",
+  "processId": "Process_LoanOrigination",
+  "scenarios": [
+    {
+      "id": "A3_SCENARIO_01_HAPPY_PATH",
+      "name": "Happy Path: Automated Auto-Approval & Immediate Fund Disbursement",
+      "description": "Complete paperwork, instant KYC match, credit bureau score 810, verified income, clean AML, low risk auto-approved, signed contract, and disbursed.",
+      "initialVariables": {
+        "applicantName": "Sarah Jenkins",
+        "requestedAmount": 35000.0,
+        "loanType": "PERSONAL",
+        "incomeMonthly": 7500.0,
+        "isSecuredLoan": false,
+        "isStandardLoan": true,
+        "requiresSeniorCommittee": false
+      },
+      "taskDecisions": [
+        {
+          "task": "Activity_CheckDocCompleteness",
+          "output": {
+            "docsComplete": true
+          }
+        },
+        {
+          "task": "Activity_VerifyKYC",
+          "output": {
+            "kycMatched": true
+          }
+        },
+        {
+          "task": "Activity_RequestBureauScore",
+          "output": {
+            "creditScore": 810,
+            "bureauRetries": 0
+          }
+        },
+        {
+          "task": "Activity_VerifyIncome",
+          "output": {
+            "incomeVerified": true,
+            "employmentStatus": "CONFIRMED_SALARIED"
+          }
+        },
+        {
+          "task": "Activity_FraudScreening",
+          "output": {
+            "fraudPassed": true,
+            "watchlistMatch": false
+          }
+        },
+        {
+          "task": "Activity_AssessEligibility",
+          "output": {
+            "riskTier": "LOW",
+            "approvedAmount": 35000.0,
+            "interestRate": 6.8
+          }
+        },
+        {
+          "task": "Activity_GenerateLoanOffer",
+          "output": {
+            "offerId": "OFFER-2026-9041"
+          }
+        },
+        {
+          "task": "Activity_AcceptOffer",
+          "output": {
+            "offerAccepted": true
+          }
+        },
+        {
+          "task": "Activity_ESignAgreement",
+          "output": {
+            "eSignStatus": "SIGNED"
+          }
+        },
+        {
+          "task": "Activity_CreateLoanAccount",
+          "output": {
+            "loanAccountId": "LN-98741025",
+            "accountCreated": true
+          }
+        },
+        {
+          "task": "Activity_DisburseFunds",
+          "output": {
+            "disbursed": true,
+            "transactionRef": "TXN-8849120"
+          }
+        },
+        {
+          "task": "Activity_NotifyDisbursement",
+          "output": {
+            "customerNotified": true
+          }
+        }
+      ],
+      "expectedEndEvent": "Event_End_LoanDisbursed"
+    },
+    {
+      "id": "A3_SCENARIO_02_DOC_DEFICIENCY_RESUBMIT",
+      "name": "Exception Path L1: Incomplete Documents Resubmission Loop",
+      "description": "Missing salary slip; system sets 7-day timer; applicant uploads missing document and workflow resumes to parallel verification.",
+      "initialVariables": {
+        "applicantName": "Michael Scott",
+        "requestedAmount": 20000.0,
+        "incomeMonthly": 4500.0
+      },
+      "taskDecisions": [
+        {
+          "task": "Activity_CheckDocCompleteness",
+          "attempt": 1,
+          "output": {
+            "docsComplete": false,
+            "missingDocs": [
+              "Payslip_Month_3"
+            ]
+          }
+        },
+        {
+          "task": "Activity_RequestMissingDocs",
+          "output": {
+            "notificationSent": true,
+            "slaDays": 7
+          }
+        },
+        {
+          "task": "Activity_UploadMissingDocs",
+          "output": {
+            "uploadedDoc": "Payslip_Month_3.pdf"
+          }
+        },
+        {
+          "task": "Activity_CheckDocCompleteness",
+          "attempt": 2,
+          "output": {
+            "docsComplete": true
+          }
+        },
+        {
+          "task": "Activity_VerifyKYC",
+          "output": {
+            "kycMatched": true
+          }
+        },
+        {
+          "task": "Activity_RequestBureauScore",
+          "output": {
+            "creditScore": 770
+          }
+        },
+        {
+          "task": "Activity_VerifyIncome",
+          "output": {
+            "incomeVerified": true
+          }
+        },
+        {
+          "task": "Activity_FraudScreening",
+          "output": {
+            "fraudPassed": true
+          }
+        },
+        {
+          "task": "Activity_AssessEligibility",
+          "output": {
+            "riskTier": "LOW",
+            "approvedAmount": 20000.0,
+            "interestRate": 7.2
+          }
+        },
+        {
+          "task": "Activity_GenerateLoanOffer",
+          "output": {
+            "offerId": "OFFER-2026-9042"
+          }
+        },
+        {
+          "task": "Activity_AcceptOffer",
+          "output": {
+            "offerAccepted": true
+          }
+        },
+        {
+          "task": "Activity_ESignAgreement",
+          "output": {
+            "eSignStatus": "SIGNED"
+          }
+        },
+        {
+          "task": "Activity_CreateLoanAccount",
+          "output": {
+            "accountCreated": true
+          }
+        },
+        {
+          "task": "Activity_DisburseFunds",
+          "output": {
+            "disbursed": true
+          }
+        },
+        {
+          "task": "Activity_NotifyDisbursement",
+          "output": {
+            "customerNotified": true
+          }
+        }
+      ],
+      "expectedEndEvent": "Event_End_LoanDisbursed"
+    },
+    {
+      "id": "A3_SCENARIO_03_KYC_MANUAL_RESOLUTION",
+      "name": "Exception Path L2: KYC Identity Discrepancy Resolved Manually",
+      "description": "Name spelling mismatch between National ID and Bank profile; loan officer manually reviews passport and resolves.",
+      "initialVariables": {
+        "applicantName": "Robert B. Downey"
+      },
+      "taskDecisions": [
+        {
+          "task": "Activity_CheckDocCompleteness",
+          "output": {
+            "docsComplete": true
+          }
+        },
+        {
+          "task": "Activity_VerifyKYC",
+          "output": {
+            "kycMatched": false,
+            "discrepancy": "Middle initial mismatch"
+          }
+        },
+        {
+          "task": "Activity_ManualKYCResolution",
+          "output": {
+            "kycResolved": true,
+            "officerNotes": "Passport confirms middle name is Bruce"
+          }
+        },
+        {
+          "task": "Activity_RequestBureauScore",
+          "output": {
+            "creditScore": 760
+          }
+        },
+        {
+          "task": "Activity_VerifyIncome",
+          "output": {
+            "incomeVerified": true
+          }
+        },
+        {
+          "task": "Activity_FraudScreening",
+          "output": {
+            "fraudPassed": true
+          }
+        },
+        {
+          "task": "Activity_AssessEligibility",
+          "output": {
+            "riskTier": "LOW",
+            "approvedAmount": 15000.0
+          }
+        },
+        {
+          "task": "Activity_AcceptOffer",
+          "output": {
+            "offerAccepted": true
+          }
+        },
+        {
+          "task": "Activity_ESignAgreement",
+          "output": {
+            "eSignStatus": "SIGNED"
+          }
+        },
+        {
+          "task": "Activity_CreateLoanAccount",
+          "output": {
+            "accountCreated": true
+          }
+        },
+        {
+          "task": "Activity_DisburseFunds",
+          "output": {
+            "disbursed": true
+          }
+        },
+        {
+          "task": "Activity_NotifyDisbursement",
+          "output": {
+            "customerNotified": true
+          }
+        }
+      ],
+      "expectedEndEvent": "Event_End_LoanDisbursed"
+    },
+    {
+      "id": "A3_SCENARIO_04_FRAUD_SANCTIONS_TERMINATED",
+      "name": "Exception Path L3: AML Sanctions Watchlist Hit (Terminate)",
+      "description": "Applicant matches OFAC sanctions list; compliance initiates SAR investigation and immediately terminates process.",
+      "initialVariables": {
+        "applicantName": "John Doe Alert"
+      },
+      "taskDecisions": [
+        {
+          "task": "Activity_CheckDocCompleteness",
+          "output": {
+            "docsComplete": true
+          }
+        },
+        {
+          "task": "Activity_VerifyKYC",
+          "output": {
+            "kycMatched": true
+          }
+        },
+        {
+          "task": "Activity_RequestBureauScore",
+          "output": {
+            "creditScore": 790
+          }
+        },
+        {
+          "task": "Activity_VerifyIncome",
+          "output": {
+            "incomeVerified": true
+          }
+        },
+        {
+          "task": "Activity_FraudScreening",
+          "output": {
+            "fraudPassed": false,
+            "reason": "Sanctions list positive match"
+          }
+        },
+        {
+          "task": "Activity_AnalyzeFraudIndicators",
+          "output": {
+            "confirmedMatch": true
+          }
+        },
+        {
+          "task": "Activity_FileSARReport",
+          "output": {
+            "sarFilingId": "SAR-2026-08192"
+          }
+        }
+      ],
+      "expectedEndEvent": "Event_End_TerminatedFraud"
+    },
+    {
+      "id": "A3_SCENARIO_05_COUNTER_OFFER_TENURE",
+      "name": "Exception Path L5 & L6: High DTI Counter-Offer Restructuring",
+      "description": "Score is borderline and DTI is high; system proposes reduced loan amount ($40K instead of $60K) and longer tenure; applicant accepts.",
+      "initialVariables": {
+        "applicantName": "Elena Rostova",
+        "requestedAmount": 60000.0,
+        "incomeMonthly": 5000.0
+      },
+      "taskDecisions": [
+        {
+          "task": "Activity_CheckDocCompleteness",
+          "output": {
+            "docsComplete": true
+          }
+        },
+        {
+          "task": "Activity_VerifyKYC",
+          "output": {
+            "kycMatched": true
+          }
+        },
+        {
+          "task": "Activity_RequestBureauScore",
+          "output": {
+            "creditScore": 665
+          }
+        },
+        {
+          "task": "Activity_VerifyIncome",
+          "output": {
+            "incomeVerified": true,
+            "dtiRatio": 54.0
+          }
+        },
+        {
+          "task": "Activity_FraudScreening",
+          "output": {
+            "fraudPassed": true
+          }
+        },
+        {
+          "task": "Activity_AssessEligibility",
+          "attempt": 1,
+          "output": {
+            "riskTier": "COUNTER_OFFER"
+          }
+        },
+        {
+          "task": "Activity_PrepareCounterOffer",
+          "output": {
+            "counterAmount": 40000.0,
+            "counterTenureMonths": 60,
+            "counterInterestRate": 8.5
+          }
+        },
+        {
+          "task": "Activity_ReviewCounterOffer",
+          "output": {
+            "counterOfferAccepted": true
+          }
+        },
+        {
+          "task": "Activity_AssessEligibility",
+          "attempt": 2,
+          "output": {
+            "riskTier": "LOW",
+            "approvedAmount": 40000.0,
+            "interestRate": 8.5
+          }
+        },
+        {
+          "task": "Activity_GenerateLoanOffer",
+          "output": {
+            "offerId": "OFFER-2026-9045"
+          }
+        },
+        {
+          "task": "Activity_AcceptOffer",
+          "output": {
+            "offerAccepted": true
+          }
+        },
+        {
+          "task": "Activity_ESignAgreement",
+          "output": {
+            "eSignStatus": "SIGNED"
+          }
+        },
+        {
+          "task": "Activity_CreateLoanAccount",
+          "output": {
+            "accountCreated": true
+          }
+        },
+        {
+          "task": "Activity_DisburseFunds",
+          "output": {
+            "disbursed": true
+          }
+        },
+        {
+          "task": "Activity_NotifyDisbursement",
+          "output": {
+            "customerNotified": true
+          }
+        }
+      ],
+      "expectedEndEvent": "Event_End_LoanDisbursed"
+    },
+    {
+      "id": "A3_SCENARIO_06_DISBURSEMENT_FAILURE_COMPENSATION",
+      "name": "Exception Path L12: Disbursement Failure & Ledger Compensation",
+      "description": "Beneficiary account is frozen; fund transfer throws error; account cannot be verified, triggering compensation to delete loan ledger account.",
+      "initialVariables": {
+        "applicantName": "David Miller",
+        "requestedAmount": 25000.0
+      },
+      "taskDecisions": [
+        {
+          "task": "Activity_CheckDocCompleteness",
+          "output": {
+            "docsComplete": true
+          }
+        },
+        {
+          "task": "Activity_VerifyKYC",
+          "output": {
+            "kycMatched": true
+          }
+        },
+        {
+          "task": "Activity_RequestBureauScore",
+          "output": {
+            "creditScore": 780
+          }
+        },
+        {
+          "task": "Activity_VerifyIncome",
+          "output": {
+            "incomeVerified": true
+          }
+        },
+        {
+          "task": "Activity_FraudScreening",
+          "output": {
+            "fraudPassed": true
+          }
+        },
+        {
+          "task": "Activity_AssessEligibility",
+          "output": {
+            "riskTier": "LOW",
+            "approvedAmount": 25000.0
+          }
+        },
+        {
+          "task": "Activity_AcceptOffer",
+          "output": {
+            "offerAccepted": true
+          }
+        },
+        {
+          "task": "Activity_ESignAgreement",
+          "output": {
+            "eSignStatus": "SIGNED"
+          }
+        },
+        {
+          "task": "Activity_CreateLoanAccount",
+          "output": {
+            "loanAccountId": "LN-2026-999",
+            "accountCreated": true
+          }
+        },
+        {
+          "task": "Activity_DisburseFunds",
+          "error": "ERR_PAYMENT_GATEWAY",
+          "output": {
+            "errorMsg": "Target bank account frozen by court order"
+          }
+        },
+        {
+          "task": "Activity_ResolveDisbursementIssue",
+          "output": {
+            "accountVerified": false,
+            "issueUnresolvable": true
+          }
+        },
+        {
+          "task": "Activity_ReverseLoanAccount",
+          "output": {
+            "accountDeleted": true,
+            "feesReversed": true
+          }
+        }
+      ],
+      "expectedEndEvent": "Event_End_DisbursementFailed"
+    }
+  ]
+}

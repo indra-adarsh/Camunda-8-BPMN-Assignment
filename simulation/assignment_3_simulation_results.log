@@ -1,0 +1,323 @@
+=== STARTING CAMUNDA 8 SIMULATION: [A3_SCENARIO_01_HAPPY_PATH] Happy Path: Automated Auto-Approval & Immediate Fund Disbursement ===
+Initial Process Payload: {
+  "applicantName": "Sarah Jenkins",
+  "requestedAmount": 35000.0,
+  "loanType": "PERSONAL",
+  "incomeMonthly": 7500.0,
+  "isSecuredLoan": false,
+  "isStandardLoan": true,
+  "requiresSeniorCommittee": false
+}
+[+] EXECUTING businessRuleTask: [Check Document Completeness (L1)]
+    Variables Updated: {"docsComplete": true}
+[+] EXECUTING serviceTask: [Automated KYC Identity Verification (L2)]
+    Variables Updated: {"kycMatched": true}
+[+] EXECUTING serviceTask: [Retrieve Credit Bureau Score (L4)]
+    Variables Updated: {"creditScore": 810, "bureauRetries": 0}
+[+] EXECUTING userTask: [Income & Employment Verification]
+    Variables Updated: {"incomeVerified": true, "employmentStatus": "CONFIRMED_SALARIED"}
+[+] EXECUTING businessRuleTask: [Automated Fraud & AML Screening (L3)]
+    Variables Updated: {"fraudPassed": true, "watchlistMatch": false}
+[+] EXECUTING businessRuleTask: [Eligibility & Risk Scoring Engine (L5, L6)]
+    Variables Updated: {"riskTier": "LOW", "approvedAmount": 35000.0, "interestRate": 6.8}
+[+] EXECUTING scriptTask: [Generate Formal Loan Offer]
+    Variables Updated: {"offerId": "OFFER-2026-9041"}
+[+] EXECUTING userTask: [Review & Accept Loan Offer]
+    Variables Updated: {"offerAccepted": true}
+[+] EXECUTING userTask: [E-Sign Loan Agreement (L11)]
+    Variables Updated: {"eSignStatus": "SIGNED"}
+[+] EXECUTING serviceTask: [Create Loan Account in Core Banking]
+    Variables Updated: {"loanAccountId": "LN-98741025", "accountCreated": true}
+[+] EXECUTING serviceTask: [Verify Account & Transfer Funds (L12)]
+    Variables Updated: {"disbursed": true, "transactionRef": "TXN-8849120"}
+[+] EXECUTING serviceTask: [Send Disbursement Notification & Welcome Kit]
+    Variables Updated: {"customerNotified": true}
+[✓] COMPLETED AT END EVENT: [Event_End_LoanDisbursed] End (Loan Successfully Disbursed)
+Final State Variables: {
+  "applicantName": "Sarah Jenkins",
+  "requestedAmount": 35000.0,
+  "loanType": "PERSONAL",
+  "incomeMonthly": 7500.0,
+  "isSecuredLoan": false,
+  "isStandardLoan": true,
+  "requiresSeniorCommittee": false,
+  "docsComplete": true,
+  "kycMatched": true,
+  "creditScore": 810,
+  "bureauRetries": 0,
+  "incomeVerified": true,
+  "employmentStatus": "CONFIRMED_SALARIED",
+  "fraudPassed": true,
+  "watchlistMatch": false,
+  "riskTier": "LOW",
+  "approvedAmount": 35000.0,
+  "interestRate": 6.8,
+  "offerId": "OFFER-2026-9041",
+  "offerAccepted": true,
+  "eSignStatus": "SIGNED",
+  "loanAccountId": "LN-98741025",
+  "accountCreated": true,
+  "disbursed": true,
+  "transactionRef": "TXN-8849120",
+  "customerNotified": true
+}
+=== SCENARIO EXECUTION FINISHED: STATUS SUCCESS ===
+
+=== STARTING CAMUNDA 8 SIMULATION: [A3_SCENARIO_02_DOC_DEFICIENCY_RESUBMIT] Exception Path L1: Incomplete Documents Resubmission Loop ===
+Initial Process Payload: {
+  "applicantName": "Michael Scott",
+  "requestedAmount": 20000.0,
+  "incomeMonthly": 4500.0
+}
+[+] EXECUTING businessRuleTask: [Check Document Completeness (L1)]
+    Variables Updated: {"docsComplete": false, "missingDocs": ["Payslip_Month_3"]}
+[+] EXECUTING serviceTask: [Generate Missing Items List & Set 7-Day Timer (L1)]
+    Variables Updated: {"notificationSent": true, "slaDays": 7}
+[+] EXECUTING userTask: [Upload Missing Documents (L1)]
+    Variables Updated: {"uploadedDoc": "Payslip_Month_3.pdf"}
+[+] EXECUTING businessRuleTask: [Check Document Completeness (L1)]
+    Variables Updated: {"docsComplete": true}
+[+] EXECUTING serviceTask: [Automated KYC Identity Verification (L2)]
+    Variables Updated: {"kycMatched": true}
+[+] EXECUTING serviceTask: [Retrieve Credit Bureau Score (L4)]
+    Variables Updated: {"creditScore": 770}
+[+] EXECUTING userTask: [Income & Employment Verification]
+    Variables Updated: {"incomeVerified": true}
+[+] EXECUTING businessRuleTask: [Automated Fraud & AML Screening (L3)]
+    Variables Updated: {"fraudPassed": true}
+[+] EXECUTING businessRuleTask: [Eligibility & Risk Scoring Engine (L5, L6)]
+    Variables Updated: {"riskTier": "LOW", "approvedAmount": 20000.0, "interestRate": 7.2}
+[+] EXECUTING scriptTask: [Generate Formal Loan Offer]
+    Variables Updated: {"offerId": "OFFER-2026-9042"}
+[+] EXECUTING userTask: [Review & Accept Loan Offer]
+    Variables Updated: {"offerAccepted": true}
+[+] EXECUTING userTask: [E-Sign Loan Agreement (L11)]
+    Variables Updated: {"eSignStatus": "SIGNED"}
+[+] EXECUTING serviceTask: [Create Loan Account in Core Banking]
+    Variables Updated: {"accountCreated": true}
+[+] EXECUTING serviceTask: [Verify Account & Transfer Funds (L12)]
+    Variables Updated: {"disbursed": true}
+[+] EXECUTING serviceTask: [Send Disbursement Notification & Welcome Kit]
+    Variables Updated: {"customerNotified": true}
+[✓] COMPLETED AT END EVENT: [Event_End_LoanDisbursed] End (Loan Successfully Disbursed)
+Final State Variables: {
+  "applicantName": "Michael Scott",
+  "requestedAmount": 20000.0,
+  "incomeMonthly": 4500.0,
+  "docsComplete": true,
+  "missingDocs": [
+    "Payslip_Month_3"
+  ],
+  "notificationSent": true,
+  "slaDays": 7,
+  "uploadedDoc": "Payslip_Month_3.pdf",
+  "kycMatched": true,
+  "creditScore": 770,
+  "incomeVerified": true,
+  "fraudPassed": true,
+  "riskTier": "LOW",
+  "approvedAmount": 20000.0,
+  "interestRate": 7.2,
+  "offerId": "OFFER-2026-9042",
+  "offerAccepted": true,
+  "eSignStatus": "SIGNED",
+  "accountCreated": true,
+  "disbursed": true,
+  "customerNotified": true
+}
+=== SCENARIO EXECUTION FINISHED: STATUS SUCCESS ===
+
+=== STARTING CAMUNDA 8 SIMULATION: [A3_SCENARIO_03_KYC_MANUAL_RESOLUTION] Exception Path L2: KYC Identity Discrepancy Resolved Manually ===
+Initial Process Payload: {
+  "applicantName": "Robert B. Downey"
+}
+[+] EXECUTING businessRuleTask: [Check Document Completeness (L1)]
+    Variables Updated: {"docsComplete": true}
+[+] EXECUTING serviceTask: [Automated KYC Identity Verification (L2)]
+    Variables Updated: {"kycMatched": false, "discrepancy": "Middle initial mismatch"}
+[+] EXECUTING userTask: [Manual KYC Investigation & Resolution (L2)]
+    Variables Updated: {"kycResolved": true, "officerNotes": "Passport confirms middle name is Bruce"}
+[+] EXECUTING serviceTask: [Retrieve Credit Bureau Score (L4)]
+    Variables Updated: {"creditScore": 760}
+[+] EXECUTING userTask: [Income & Employment Verification]
+    Variables Updated: {"incomeVerified": true}
+[+] EXECUTING businessRuleTask: [Automated Fraud & AML Screening (L3)]
+    Variables Updated: {"fraudPassed": true}
+[+] EXECUTING businessRuleTask: [Eligibility & Risk Scoring Engine (L5, L6)]
+    Variables Updated: {"riskTier": "LOW", "approvedAmount": 15000.0}
+[+] EXECUTING userTask: [Review & Accept Loan Offer]
+    Variables Updated: {"offerAccepted": true}
+[+] EXECUTING userTask: [E-Sign Loan Agreement (L11)]
+    Variables Updated: {"eSignStatus": "SIGNED"}
+[+] EXECUTING serviceTask: [Create Loan Account in Core Banking]
+    Variables Updated: {"accountCreated": true}
+[+] EXECUTING serviceTask: [Verify Account & Transfer Funds (L12)]
+    Variables Updated: {"disbursed": true}
+[+] EXECUTING serviceTask: [Send Disbursement Notification & Welcome Kit]
+    Variables Updated: {"customerNotified": true}
+[✓] COMPLETED AT END EVENT: [Event_End_LoanDisbursed] End (Loan Successfully Disbursed)
+Final State Variables: {
+  "applicantName": "Robert B. Downey",
+  "docsComplete": true,
+  "kycMatched": false,
+  "discrepancy": "Middle initial mismatch",
+  "kycResolved": true,
+  "officerNotes": "Passport confirms middle name is Bruce",
+  "creditScore": 760,
+  "incomeVerified": true,
+  "fraudPassed": true,
+  "riskTier": "LOW",
+  "approvedAmount": 15000.0,
+  "offerAccepted": true,
+  "eSignStatus": "SIGNED",
+  "accountCreated": true,
+  "disbursed": true,
+  "customerNotified": true
+}
+=== SCENARIO EXECUTION FINISHED: STATUS SUCCESS ===
+
+=== STARTING CAMUNDA 8 SIMULATION: [A3_SCENARIO_04_FRAUD_SANCTIONS_TERMINATED] Exception Path L3: AML Sanctions Watchlist Hit (Terminate) ===
+Initial Process Payload: {
+  "applicantName": "John Doe Alert"
+}
+[+] EXECUTING businessRuleTask: [Check Document Completeness (L1)]
+    Variables Updated: {"docsComplete": true}
+[+] EXECUTING serviceTask: [Automated KYC Identity Verification (L2)]
+    Variables Updated: {"kycMatched": true}
+[+] EXECUTING serviceTask: [Retrieve Credit Bureau Score (L4)]
+    Variables Updated: {"creditScore": 790}
+[+] EXECUTING userTask: [Income & Employment Verification]
+    Variables Updated: {"incomeVerified": true}
+[+] EXECUTING businessRuleTask: [Automated Fraud & AML Screening (L3)]
+    Variables Updated: {"fraudPassed": false, "reason": "Sanctions list positive match"}
+[+] EXECUTING userTask: [Analyze Forged Docs & Sanctions Hit]
+    Variables Updated: {"confirmedMatch": true}
+[+] EXECUTING serviceTask: [File Regulatory SAR / AML Report]
+    Variables Updated: {"sarFilingId": "SAR-2026-08192"}
+[✓] COMPLETED AT END EVENT: [Event_End_TerminatedFraud] Terminate (Fraud / AML Confirmed)
+Final State Variables: {
+  "applicantName": "John Doe Alert",
+  "docsComplete": true,
+  "kycMatched": true,
+  "creditScore": 790,
+  "incomeVerified": true,
+  "fraudPassed": false,
+  "reason": "Sanctions list positive match",
+  "confirmedMatch": true,
+  "sarFilingId": "SAR-2026-08192"
+}
+=== SCENARIO EXECUTION FINISHED: STATUS SUCCESS ===
+
+=== STARTING CAMUNDA 8 SIMULATION: [A3_SCENARIO_05_COUNTER_OFFER_TENURE] Exception Path L5 & L6: High DTI Counter-Offer Restructuring ===
+Initial Process Payload: {
+  "applicantName": "Elena Rostova",
+  "requestedAmount": 60000.0,
+  "incomeMonthly": 5000.0
+}
+[+] EXECUTING businessRuleTask: [Check Document Completeness (L1)]
+    Variables Updated: {"docsComplete": true}
+[+] EXECUTING serviceTask: [Automated KYC Identity Verification (L2)]
+    Variables Updated: {"kycMatched": true}
+[+] EXECUTING serviceTask: [Retrieve Credit Bureau Score (L4)]
+    Variables Updated: {"creditScore": 665}
+[+] EXECUTING userTask: [Income & Employment Verification]
+    Variables Updated: {"incomeVerified": true, "dtiRatio": 54.0}
+[+] EXECUTING businessRuleTask: [Automated Fraud & AML Screening (L3)]
+    Variables Updated: {"fraudPassed": true}
+[+] EXECUTING businessRuleTask: [Eligibility & Risk Scoring Engine (L5, L6)]
+    Variables Updated: {"riskTier": "COUNTER_OFFER"}
+[+] EXECUTING userTask: [Prepare Counter-Offer / Guarantor Request (L5, L6)]
+    Variables Updated: {"counterAmount": 40000.0, "counterTenureMonths": 60, "counterInterestRate": 8.5}
+[+] EXECUTING userTask: [Review Counter-Offer / Guarantor Terms (L5, L6)]
+    Variables Updated: {"counterOfferAccepted": true}
+[+] EXECUTING businessRuleTask: [Eligibility & Risk Scoring Engine (L5, L6)]
+    Variables Updated: {"riskTier": "LOW", "approvedAmount": 40000.0, "interestRate": 8.5}
+[+] EXECUTING scriptTask: [Generate Formal Loan Offer]
+    Variables Updated: {"offerId": "OFFER-2026-9045"}
+[+] EXECUTING userTask: [Review & Accept Loan Offer]
+    Variables Updated: {"offerAccepted": true}
+[+] EXECUTING userTask: [E-Sign Loan Agreement (L11)]
+    Variables Updated: {"eSignStatus": "SIGNED"}
+[+] EXECUTING serviceTask: [Create Loan Account in Core Banking]
+    Variables Updated: {"accountCreated": true}
+[+] EXECUTING serviceTask: [Verify Account & Transfer Funds (L12)]
+    Variables Updated: {"disbursed": true}
+[+] EXECUTING serviceTask: [Send Disbursement Notification & Welcome Kit]
+    Variables Updated: {"customerNotified": true}
+[✓] COMPLETED AT END EVENT: [Event_End_LoanDisbursed] End (Loan Successfully Disbursed)
+Final State Variables: {
+  "applicantName": "Elena Rostova",
+  "requestedAmount": 60000.0,
+  "incomeMonthly": 5000.0,
+  "docsComplete": true,
+  "kycMatched": true,
+  "creditScore": 665,
+  "incomeVerified": true,
+  "dtiRatio": 54.0,
+  "fraudPassed": true,
+  "riskTier": "LOW",
+  "counterAmount": 40000.0,
+  "counterTenureMonths": 60,
+  "counterInterestRate": 8.5,
+  "counterOfferAccepted": true,
+  "approvedAmount": 40000.0,
+  "interestRate": 8.5,
+  "offerId": "OFFER-2026-9045",
+  "offerAccepted": true,
+  "eSignStatus": "SIGNED",
+  "accountCreated": true,
+  "disbursed": true,
+  "customerNotified": true
+}
+=== SCENARIO EXECUTION FINISHED: STATUS SUCCESS ===
+
+=== STARTING CAMUNDA 8 SIMULATION: [A3_SCENARIO_06_DISBURSEMENT_FAILURE_COMPENSATION] Exception Path L12: Disbursement Failure & Ledger Compensation ===
+Initial Process Payload: {
+  "applicantName": "David Miller",
+  "requestedAmount": 25000.0
+}
+[+] EXECUTING businessRuleTask: [Check Document Completeness (L1)]
+    Variables Updated: {"docsComplete": true}
+[+] EXECUTING serviceTask: [Automated KYC Identity Verification (L2)]
+    Variables Updated: {"kycMatched": true}
+[+] EXECUTING serviceTask: [Retrieve Credit Bureau Score (L4)]
+    Variables Updated: {"creditScore": 780}
+[+] EXECUTING userTask: [Income & Employment Verification]
+    Variables Updated: {"incomeVerified": true}
+[+] EXECUTING businessRuleTask: [Automated Fraud & AML Screening (L3)]
+    Variables Updated: {"fraudPassed": true}
+[+] EXECUTING businessRuleTask: [Eligibility & Risk Scoring Engine (L5, L6)]
+    Variables Updated: {"riskTier": "LOW", "approvedAmount": 25000.0}
+[+] EXECUTING userTask: [Review & Accept Loan Offer]
+    Variables Updated: {"offerAccepted": true}
+[+] EXECUTING userTask: [E-Sign Loan Agreement (L11)]
+    Variables Updated: {"eSignStatus": "SIGNED"}
+[+] EXECUTING serviceTask: [Create Loan Account in Core Banking]
+    Variables Updated: {"loanAccountId": "LN-2026-999", "accountCreated": true}
+[-] EXECUTING serviceTask: [Verify Account & Transfer Funds (L12)] --> TRIGGERED ERROR: ERR_PAYMENT_GATEWAY
+[+] EXECUTING userTask: [Resolve Account Discrepancy & Hold Funds (L12)]
+    Variables Updated: {"accountVerified": false, "issueUnresolvable": true}
+[+] EXECUTING serviceTask: [Reverse Loan Account Creation (L12)]
+    Variables Updated: {"accountDeleted": true, "feesReversed": true}
+[✓] COMPLETED AT END EVENT: [Event_End_DisbursementFailed] End (Disbursement Failed)
+Final State Variables: {
+  "applicantName": "David Miller",
+  "requestedAmount": 25000.0,
+  "docsComplete": true,
+  "kycMatched": true,
+  "creditScore": 780,
+  "incomeVerified": true,
+  "fraudPassed": true,
+  "riskTier": "LOW",
+  "approvedAmount": 25000.0,
+  "offerAccepted": true,
+  "eSignStatus": "SIGNED",
+  "loanAccountId": "LN-2026-999",
+  "accountCreated": true,
+  "errorMsg": "Target bank account frozen by court order",
+  "accountVerified": false,
+  "issueUnresolvable": true,
+  "accountDeleted": true,
+  "feesReversed": true
+}
+=== SCENARIO EXECUTION FINISHED: STATUS SUCCESS ===
