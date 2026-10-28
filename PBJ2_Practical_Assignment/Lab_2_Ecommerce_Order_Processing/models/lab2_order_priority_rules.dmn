@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_OrderPriority" name="Order Priority DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="5.49.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.5.0">
+  <decision id="decision_order_priority" name="Order Priority &amp; Routing Decision">
+    <decisionTable id="DecisionTable_OrderPriority" hitPolicy="UNIQUE">
+      <input id="Input_orderTotal" label="Order Total ($)">
+        <inputExpression id="InputExpr_orderTotal" typeRef="number">
+          <text>orderTotal</text>
+        </inputExpression>
+      </input>
+      <input id="Input_customerCategory" label="Customer Tier">
+        <inputExpression id="InputExpr_customerCategory" typeRef="string">
+          <text>customerCategory</text>
+        </inputExpression>
+      </input>
+      <input id="Input_deliveryPreference" label="Delivery Preference">
+        <inputExpression id="InputExpr_deliveryPreference" typeRef="string">
+          <text>deliveryPreference</text>
+        </inputExpression>
+      </input>
+      <output id="Output_priority" label="Fulfillment Priority" name="priority" typeRef="string" />
+      <output id="Output_manualReviewRequired" label="Manual Review Required" name="manualReviewRequired" typeRef="boolean" />
+      <output id="Output_fulfillmentSlaHours" label="Fulfillment SLA (Hours)" name="fulfillmentSlaHours" typeRef="number" />
+      <output id="Output_priorityReason" label="Routing Rationale" name="priorityReason" typeRef="string" />
+      
+      <rule id="Rule_HighValueReview">
+        <description>High value orders require manual fraud and verification review</description>
+        <inputEntry id="Unary_1_1">
+          <text>&gt; 5000</text>
+        </inputEntry>
+        <inputEntry id="Unary_1_2">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="Unary_1_3">
+          <text>-</text>
+        </inputEntry>
+        <outputEntry id="Lit_1_1">
+          <text>&#34;HIGH&#34;</text>
+        </outputEntry>
+        <outputEntry id="Lit_1_2">
+          <text>true</text>
+        </outputEntry>
+        <outputEntry id="Lit_1_3">
+          <text>4</text>
+        </outputEntry>
+        <outputEntry id="Lit_1_4">
+          <text>&#34;High-value order requires fraud and manual clearance review&#34;</text>
+        </outputEntry>
+      </rule>
+
+      <rule id="Rule_PlatinumPriority">
+        <description>Platinum customers always receive high priority</description>
+        <inputEntry id="Unary_2_1">
+          <text>&lt;= 5000</text>
+        </inputEntry>
+        <inputEntry id="Unary_2_2">
+          <text>&#34;PLATINUM&#34;</text>
+        </inputEntry>
+        <inputEntry id="Unary_2_3">
+          <text>-</text>
+        </inputEntry>
+        <outputEntry id="Lit_2_1">
+          <text>&#34;HIGH&#34;</text>
+        </outputEntry>
+        <outputEntry id="Lit_2_2">
+          <text>false</text>
+        </outputEntry>
+        <outputEntry id="Lit_2_3">
+          <text>6</text>
+        </outputEntry>
+        <outputEntry id="Lit_2_4">
+          <text>&#34;Platinum VIP customer guaranteed expedited dispatch&#34;</text>
+        </outputEntry>
+      </rule>
+
+      <rule id="Rule_GoldOvernight">
+        <description>Gold customers with overnight delivery</description>
+        <inputEntry id="Unary_3_1">
+          <text>&lt;= 5000</text>
+        </inputEntry>
+        <inputEntry id="Unary_3_2">
+          <text>&#34;GOLD&#34;</text>
+        </inputEntry>
+        <inputEntry id="Unary_3_3">
+          <text>&#34;OVERNIGHT&#34;</text>
+        </inputEntry>
+        <outputEntry id="Lit_3_1">
+          <text>&#34;HIGH&#34;</text>
+        </outputEntry>
+        <outputEntry id="Lit_3_2">
+          <text>false</text>
+        </outputEntry>
+        <outputEntry id="Lit_3_3">
+          <text>8</text>
+        </outputEntry>
+        <outputEntry id="Lit_3_4">
+          <text>&#34;Gold tier overnight priority dispatch&#34;</text>
+        </outputEntry>
+      </rule>
+
+      <rule id="Rule_GoldStandard">
+        <description>Gold customers with standard delivery</description>
+        <inputEntry id="Unary_4_1">
+          <text>&lt;= 5000</text>
+        </inputEntry>
+        <inputEntry id="Unary_4_2">
+          <text>&#34;GOLD&#34;</text>
+        </inputEntry>
+        <inputEntry id="Unary_4_3">
+          <text>not(&#34;OVERNIGHT&#34;)</text>
+        </inputEntry>
+        <outputEntry id="Lit_4_1">
+          <text>&#34;MEDIUM&#34;</text>
+        </outputEntry>
+        <outputEntry id="Lit_4_2">
+          <text>false</text>
+        </outputEntry>
+        <outputEntry id="Lit_4_3">
+          <text>24</text>
+        </outputEntry>
+        <outputEntry id="Lit_4_4">
+          <text>&#34;Gold tier standard priority fulfillment&#34;</text>
+        </outputEntry>
+      </rule>
+
+      <rule id="Rule_RegularOvernight">
+        <description>Regular customers paying for overnight delivery</description>
+        <inputEntry id="Unary_5_1">
+          <text>&lt;= 5000</text>
+        </inputEntry>
+        <inputEntry id="Unary_5_2">
+          <text>&#34;REGULAR&#34;</text>
+        </inputEntry>
+        <inputEntry id="Unary_5_3">
+          <text>&#34;OVERNIGHT&#34;</text>
+        </inputEntry>
+        <outputEntry id="Lit_5_1">
+          <text>&#34;MEDIUM&#34;</text>
+        </outputEntry>
+        <outputEntry id="Lit_5_2">
+          <text>false</text>
+        </outputEntry>
+        <outputEntry id="Lit_5_3">
+          <text>12</text>
+        </outputEntry>
+        <outputEntry id="Lit_5_4">
+          <text>&#34;Regular customer expedited overnight queue&#34;</text>
+        </outputEntry>
+      </rule>
+
+      <rule id="Rule_RegularExpress">
+        <description>Regular customers paying for express delivery</description>
+        <inputEntry id="Unary_6_1">
+          <text>&lt;= 5000</text>
+        </inputEntry>
+        <inputEntry id="Unary_6_2">
+          <text>&#34;REGULAR&#34;</text>
+        </inputEntry>
+        <inputEntry id="Unary_6_3">
+          <text>&#34;EXPRESS&#34;</text>
+        </inputEntry>
+        <outputEntry id="Lit_6_1">
+          <text>&#34;MEDIUM&#34;</text>
+        </outputEntry>
+        <outputEntry id="Lit_6_2">
+          <text>false</text>
+        </outputEntry>
+        <outputEntry id="Lit_6_3">
+          <text>24</text>
+        </outputEntry>
+        <outputEntry id="Lit_6_4">
+          <text>&#34;Regular customer express packaging queue&#34;</text>
+        </outputEntry>
+      </rule>
+
+      <rule id="Rule_RegularStandard">
+        <description>Regular customers with standard delivery</description>
+        <inputEntry id="Unary_7_1">
+          <text>&lt;= 5000</text>
+        </inputEntry>
+        <inputEntry id="Unary_7_2">
+          <text>&#34;REGULAR&#34;</text>
+        </inputEntry>
+        <inputEntry id="Unary_7_3">
+          <text>&#34;STANDARD&#34;</text>
+        </inputEntry>
+        <outputEntry id="Lit_7_1">
+          <text>&#34;LOW&#34;</text>
+        </outputEntry>
+        <outputEntry id="Lit_7_2">
+          <text>false</text>
+        </outputEntry>
+        <outputEntry id="Lit_7_3">
+          <text>48</text>
+        </outputEntry>
+        <outputEntry id="Lit_7_4">
+          <text>&#34;Regular customer economy fulfillment queue&#34;</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="DMNDiagram_OrderPriority">
+      <dmndi:DMNShape id="DMNShape_decision_order_priority" dmnElementRef="decision_order_priority">
+        <dc:Bounds height="80" width="180" x="160" y="100" />
+      </dmndi:DMNShape>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</definitions>

@@ -1,0 +1,32 @@
+{
+  "testScenario": "Lab 3 - Scenario 4: No Appointment Slots Available",
+  "description": "Patient seeks specialist appointment in a fully booked clinic (appointmentPreference = DERMATOLOGY). Mock scheduling API returns slotsAvailable = false. Gateway routes to Authorised Staff Review / Manual Waitlist user task.",
+  "variables": {
+    "patientReference": "PAT-2026-004-NOSLOT",
+    "patientName": "Evelyn Reed",
+    "age": 35,
+    "appointmentPreference": "DERMATOLOGY",
+    "symptomsSummary": "Persistent contact dermatitis rash unresponsive to topical creams.",
+    "hasChestPain": false,
+    "hasBreathingDifficulty": false,
+    "painScale": 3,
+    "feverTemperature": 36.8,
+    "simulateWorkerFailure": false,
+    "simulateApiFailure": false
+  },
+  "tasklistSimulation": {
+    "assignedGroup": "hospital-registrars",
+    "humanAction": "Complete Authorised Staff Review / Manual Scheduling User Task",
+    "formInputs": {
+      "waitlistAction": "ASSIGN_EMERGENCY_OVERFLOW_SLOT",
+      "overbookingAuthorised": true,
+      "assignedOverbookingTime": "Tomorrow 08:30 AM"
+    }
+  },
+  "expectedOutcome": {
+    "registrationValid": true,
+    "triageCategory": "Routine",
+    "slotsAvailable": false,
+    "finalState": "Patient Manually Scheduled / Waitlisted"
+  }
+}

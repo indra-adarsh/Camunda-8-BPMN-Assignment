@@ -1,0 +1,29 @@
+{
+  "testScenario": "Lab 2 - Scenario 5: Service Failure and Incident Recovery",
+  "description": "Simulates payment gateway endpoint throwing HTTP 500 error due to transient upstream network degradation. Operate flags incident, operator updates retry policy or re-triggers after mock service recovers.",
+  "variables": {
+    "orderId": "ORD-2026-505-FAIL",
+    "customerReference": "CUST-GOLD-77",
+    "customerCategory": "GOLD",
+    "productId": "PROD-MONITOR-4K",
+    "quantity": 1,
+    "unitPrice": 850.0,
+    "deliveryPreference": "EXPRESS",
+    "paymentToken": "tok_simulate_server_error_500",
+    "simulateWorkerFailure": false,
+    "simulatePaymentError": true
+  },
+  "operateIncidentInspection": {
+    "activityId": "Activity_ProcessPaymentREST",
+    "incidentType": "CONNECTOR_HTTP_ERROR",
+    "errorMessage": "REST Connector execution failed: HTTP 500 Internal Server Error contacting payment gateway",
+    "resolutionAndRecovery": [
+      "1. Navigate to Camunda 8 Operate -> Instances with Incidents.",
+      "2. Select instance ORD-2026-505-FAIL.",
+      "3. Inspect task Activity_ProcessPaymentREST error details.",
+      "4. Mock payment gateway is restarted or paymentToken corrected to tok_visa_valid_9988 in variable editor.",
+      "5. Click 'Retry' on the incident in Operate.",
+      "6. Payment succeeds and token moves to Activity_FulfillAndDispatch."
+    ]
+  }
+}

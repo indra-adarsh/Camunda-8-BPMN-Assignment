@@ -1,0 +1,32 @@
+{
+  "testScenario": "Lab 2 - Scenario 4: High-Value Order Routed to Manual Review",
+  "description": "High-value bulk order totaling $7,500 (orderTotal > $5,000). DMN and gateway trigger manual review in Tasklist for fraud verification before payment processing.",
+  "variables": {
+    "orderId": "ORD-2026-404-HIGHVAL",
+    "customerReference": "CUST-ENTERPRISE-01",
+    "customerCategory": "GOLD",
+    "productId": "PROD-SERVER-BLADE",
+    "quantity": 3,
+    "unitPrice": 2500.0,
+    "deliveryPreference": "OVERNIGHT",
+    "paymentToken": "tok_corp_valid_7711",
+    "simulateWorkerFailure": false,
+    "simulatePaymentError": false
+  },
+  "tasklistSimulation": {
+    "assignedGroup": "order-managers",
+    "humanAction": "Complete User Task in Tasklist",
+    "formInputs": {
+      "reviewApproved": true,
+      "reviewRemarks": "Verified corporate purchase order reference and credit line; approved for overnight dispatch."
+    }
+  },
+  "expectedOutcome": {
+    "orderTotal": 7500.0,
+    "orderPriority": "HIGH",
+    "manualReviewRequired": true,
+    "reviewApproved": true,
+    "paymentStatus": "SUCCESS",
+    "finalState": "Order Fulfilled Successfully"
+  }
+}

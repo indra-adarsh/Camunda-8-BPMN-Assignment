@@ -1,0 +1,24 @@
+{
+  "testScenario": "Lab 1 - Scenario 4: Credit-Assessment API Error or Timeout",
+  "description": "Simulates REST connector calling credit bureau service which returns HTTP 504 Gateway Timeout / 500 Internal Server Error. Process raises an incident in Operate.",
+  "variables": {
+    "applicantId": "ERR_TIMEOUT_404",
+    "applicantName": "Elena Rostova",
+    "requestedAmount": 30000,
+    "monthlyIncome": 6000,
+    "existingMonthlyDebt": 1500,
+    "simulateWorkerFailure": false,
+    "simulateApiTimeout": true
+  },
+  "operateIncidentInspection": {
+    "incidentType": "IO_MAPPING_ERROR / CONNECTOR_HTTP_ERROR",
+    "errorMessage": "REST Connector failed: HTTP 504 Gateway Timeout contacting credit-assessment service",
+    "recoverySteps": [
+      "1. Open Camunda 8 Operate console.",
+      "2. Filter for Process 'Process_LoanApprovalAutomation' in Incident state.",
+      "3. Inspect failed activity 'Activity_CreditAssessmentREST'.",
+      "4. Verify the downstream credit service availability.",
+      "5. Click 'Retry' job action in Operate after mock service health recovers."
+    ]
+  }
+}

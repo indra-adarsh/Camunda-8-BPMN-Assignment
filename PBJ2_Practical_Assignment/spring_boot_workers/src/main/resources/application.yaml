@@ -1,0 +1,30 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: camunda8-pbj2-workers
+
+# Zeebe / Camunda 8 Client Configuration
+zeebe:
+  client:
+    broker:
+      gateway-address: ${ZEEBE_GATEWAY_ADDRESS:127.0.0.1:26500}
+    security:
+      plaintext: ${ZEEBE_PLAINTEXT:true}
+    worker:
+      max-jobs-active: 32
+      threads: 4
+      default-name: pbj2-spring-worker
+    # Camunda 8 SaaS Configuration (Alternative to local broker)
+    # cloud:
+    #   cluster-id: ${ZEEBE_CLUSTER_ID:}
+    #   client-id: ${ZEEBE_CLIENT_ID:}
+    #   client-secret: ${ZEEBE_CLIENT_SECRET:}
+    #   region: ${ZEEBE_REGION:bru-2}
+
+logging:
+  level:
+    root: INFO
+    com.camunda.pbj2: DEBUG
+    io.camunda.zeebe.client: INFO
