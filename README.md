@@ -31,9 +31,15 @@ Camunda-8-BPMN-Assignment/
 │   ├── Assignment_1_Student_Project_Allocation/           # Assignment 1: Student Project Approval & Allocation
 │   │   ├── Student_Project_Approval_and_Allocation.bpmn   # BPMN 2.0 model (Pool, 5 Lanes, Happy Path + F1-F11)
 │   │   └── Assignment_1_Report.md                         # Detailed Failure Path Register (F1-F11) & Justifications
-│   └── Assignment_3_Loan_Origination_Approval/            # Assignment 3: Loan Origination & Approval System
-│       ├── Loan_Origination_and_Approval_System.bpmn      # BPMN 2.0 model (2 Pools, 6 Lanes, Happy Path + L1-L12)
-│       └── Assignment_3_Report.md                         # Detailed Failure Path Register (L1-L12) & Justifications
+│   ├── Assignment_3_Loan_Origination_Approval/            # Assignment 3: Loan Origination & Approval System
+│   │   ├── Loan_Origination_and_Approval_System.bpmn      # BPMN 2.0 model (2 Pools, 6 Lanes, Happy Path + L1-L12)
+│   │   └── Assignment_3_Report.md                         # Detailed Failure Path Register (L1-L12) & Justifications
+│   └── Assessment_4_PBJ2_End_to_End_Workflow_Automation/  # Assessment 4: Camunda 8 Labs 1-3 End-to-End Automation
+│       ├── Lab_1_Loan_Approval_Automation/                # Lab 1: Models, Payloads, Report
+│       ├── Lab_2_Ecommerce_Order_Processing/              # Lab 2: Models, Payloads, Report
+│       ├── Lab_3_Hospital_Patient_Triage/                 # Lab 3: Models, Payloads, Report
+│       ├── spring_boot_workers/                           # Java/Spring Boot Zeebe workers & mock REST APIs
+│       └── PBJ2_PRACTICAL_ASSIGNMENT_REPORT.md            # Comprehensive Assessment 4 Report
 ├── DMN_BPMN_Assignment/                                   # Decision Management & Business Rule Tasks
 │   ├── 01_Loan_Application_Risk_Routing.bpmn              # Exercise 1: Single Result DMN + XOR Routing
 │   ├── 01_evaluate_loan_risk.dmn                          # DMN 1.3 Table (Unique Hit Policy, FEEL expressions)
@@ -54,8 +60,8 @@ Camunda-8-BPMN-Assignment/
 
 ## Detailed Project Descriptions
 
-### 🌟 PBJ-2 Practical Assignment: Camunda 8 End-to-End Workflow Automation ([PBJ2_Practical_Assignment/](PBJ2_Practical_Assignment/))
-*Master Implementation & Engineering Report: [PBJ2_PRACTICAL_ASSIGNMENT_REPORT.md](PBJ2_Practical_Assignment/PBJ2_PRACTICAL_ASSIGNMENT_REPORT.md)*
+### 🌟 Assessment 4: PBJ-2 Practical Assignment (Camunda 8 Labs 1–3 End-to-End Automation) ([Project_Assignments/Assessment_4_PBJ2_End_to_End_Workflow_Automation/](Project_Assignments/Assessment_4_PBJ2_End_to_End_Workflow_Automation/))
+*Master Implementation & Engineering Report: [PBJ2_PRACTICAL_ASSIGNMENT_REPORT.md](Project_Assignments/Assessment_4_PBJ2_End_to_End_Workflow_Automation/PBJ2_PRACTICAL_ASSIGNMENT_REPORT.md)*
 
 - **Lab 1: End-to-End Loan Approval Automation** ([PBJ2_Practical_Assignment/Lab_1_Loan_Approval_Automation/](PBJ2_Practical_Assignment/Lab_1_Loan_Approval_Automation/)):
   - Full BPMN orchestration combining Java/Spring Boot Zeebe job worker (`validate-loan-applicant`), DMN decision table (`decision_loan_approval`), Camunda 8 HTTP REST Outbound Connector (`POST /api/credit/assess`), Tasklist Underwriter user review, and Operate incident retry resolution.

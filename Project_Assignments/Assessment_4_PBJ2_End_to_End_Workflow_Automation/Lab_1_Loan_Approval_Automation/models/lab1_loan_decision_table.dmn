@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_LoanDecision" name="Loan Decision DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="5.49.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.5.0">
+  <decision id="decision_loan_approval" name="Loan Approval Decision Table">
+    <decisionTable id="DecisionTable_LoanApproval" hitPolicy="UNIQUE">
+      <input id="Input_creditScore" label="Credit Score">
+        <inputExpression id="InputExpr_creditScore" typeRef="number">
+          <text>creditScore</text>
+        </inputExpression>
+      </input>
+      <input id="Input_dti" label="Debt-to-Income Ratio (%)">
+        <inputExpression id="InputExpr_dti" typeRef="number">
+          <text>debtToIncomeRatio</text>
+        </inputExpression>
+      </input>
+      <input id="Input_loanAmount" label="Requested Loan Amount ($)">
+        <inputExpression id="InputExpr_loanAmount" typeRef="number">
+          <text>requestedAmount</text>
+        </inputExpression>
+      </input>
+      <output id="Output_decision" label="Decision" name="decision" typeRef="string" />
+      <output id="Output_interestRate" label="Interest Rate (%)" name="interestRate" typeRef="number" />
+      <output id="Output_decisionReason" label="Decision Reason" name="decisionReason" typeRef="string" />
+      <rule id="Rule_PrimeAutoApproval">
+        <description>Prime credit rating with low DTI qualifies for prime rate approval</description>
+        <inputEntry id="Unary_1_1">
+          <text>&gt;= 750</text>
+        </inputEntry>
+        <inputEntry id="Unary_1_2">
+          <text>&lt;= 35</text>
+        </inputEntry>
+        <inputEntry id="Unary_1_3">
+          <text>&lt;= 100000</text>
+        </inputEntry>
+        <outputEntry id="Lit_1_1">
+          <text>&#34;Approved&#34;</text>
+        </outputEntry>
+        <outputEntry id="Lit_1_2">
+          <text>5.5</text>
+        </outputEntry>
+        <outputEntry id="Lit_1_3">
+          <text>&#34;Prime credit rating and healthy DTI ratio qualify for instant automated approval&#34;</text>
+        </outputEntry>
+      </rule>
+      <rule id="Rule_StandardTierApproval">
+        <description>Standard credit profile meets standard automated criteria</description>
+        <inputEntry id="Unary_2_1">
+          <text>[700..749]</text>
+        </inputEntry>
+        <inputEntry id="Unary_2_2">
+          <text>&lt;= 45</text>
+        </inputEntry>
+        <inputEntry id="Unary_2_3">
+          <text>&lt;= 50000</text>
+        </inputEntry>
+        <outputEntry id="Lit_2_1">
+          <text>&#34;Approved&#34;</text>
+        </outputEntry>
+        <outputEntry id="Lit_2_2">
+          <text>6.9</text>
+        </outputEntry>
+        <outputEntry id="Lit_2_3">
+          <text>&#34;Standard credit profile meets automated approval limits&#34;</text>
+        </outputEntry>
+      </rule>
+      <rule id="Rule_NearPrimeManualReview">
+        <description>Borderline credit rating routed to human underwriter</description>
+        <inputEntry id="Unary_3_1">
+          <text>[620..699]</text>
+        </inputEntry>
+        <inputEntry id="Unary_3_2">
+          <text>&lt;= 45</text>
+        </inputEntry>
+        <inputEntry id="Unary_3_3">
+          <text>&lt;= 50000</text>
+        </inputEntry>
+        <outputEntry id="Lit_3_1">
+          <text>&#34;Manual Review&#34;</text>
+        </outputEntry>
+        <outputEntry id="Lit_3_2">
+          <text>8.5</text>
+        </outputEntry>
+        <outputEntry id="Lit_3_3">
+          <text>&#34;Near-prime credit profile requires underwriter manual review&#34;</text>
+        </outputEntry>
+      </rule>
+      <rule id="Rule_HighDtiManualReview">
+        <description>High DTI despite good credit score requires manual underwriting</description>
+        <inputEntry id="Unary_4_1">
+          <text>&gt;= 700</text>
+        </inputEntry>
+        <inputEntry id="Unary_4_2">
+          <text>(35..55]</text>
+        </inputEntry>
+        <inputEntry id="Unary_4_3">
+          <text>&gt; 50000</text>
+        </inputEntry>
+        <outputEntry id="Lit_4_1">
+          <text>&#34;Manual Review&#34;</text>
+        </outputEntry>
+        <outputEntry id="Lit_4_2">
+          <text>7.8</text>
+        </outputEntry>
+        <outputEntry id="Lit_4_3">
+          <text>&#34;Elevated debt-to-income or high balance requires manual underwriter review&#34;</text>
+        </outputEntry>
+      </rule>
+      <rule id="Rule_JumboAmountManualReview">
+        <description>High loan amount exceeding 100k requires committee review</description>
+        <inputEntry id="Unary_5_1">
+          <text>&gt;= 750</text>
+        </inputEntry>
+        <inputEntry id="Unary_5_2">
+          <text>&lt;= 35</text>
+        </inputEntry>
+        <inputEntry id="Unary_5_3">
+          <text>&gt; 100000</text>
+        </inputEntry>
+        <outputEntry id="Lit_5_1">
+          <text>&#34;Manual Review&#34;</text>
+        </outputEntry>
+        <outputEntry id="Lit_5_2">
+          <text>6.2</text>
+        </outputEntry>
+        <outputEntry id="Lit_5_3">
+          <text>&#34;Jumbo loan amount requires senior credit committee manual sign-off&#34;</text>
+        </outputEntry>
+      </rule>
+      <rule id="Rule_SubprimeRejection">
+        <description>Credit score below threshold</description>
+        <inputEntry id="Unary_6_1">
+          <text>&lt; 620</text>
+        </inputEntry>
+        <inputEntry id="Unary_6_2">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="Unary_6_3">
+          <text>-</text>
+        </inputEntry>
+        <outputEntry id="Lit_6_1">
+          <text>&#34;Rejected&#34;</text>
+        </outputEntry>
+        <outputEntry id="Lit_6_2">
+          <text>0.0</text>
+        </outputEntry>
+        <outputEntry id="Lit_6_3">
+          <text>&#34;Credit score is below the minimum institutional underwriting threshold of 620&#34;</text>
+        </outputEntry>
+      </rule>
+      <rule id="Rule_ExtremeDtiRejection">
+        <description>Excessive debt burden</description>
+        <inputEntry id="Unary_7_1">
+          <text>&gt;= 620</text>
+        </inputEntry>
+        <inputEntry id="Unary_7_2">
+          <text>&gt; 55</text>
+        </inputEntry>
+        <inputEntry id="Unary_7_3">
+          <text>-</text>
+        </inputEntry>
+        <outputEntry id="Lit_7_1">
+          <text>&#34;Rejected&#34;</text>
+        </outputEntry>
+        <outputEntry id="Lit_7_2">
+          <text>0.0</text>
+        </outputEntry>
+        <outputEntry id="Lit_7_3">
+          <text>&#34;Debt-to-income ratio exceeds regulatory maximum limit of 55%&#34;</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="DMNDiagram_LoanDecision">
+      <dmndi:DMNShape id="DMNShape_decision_loan_approval" dmnElementRef="decision_loan_approval">
+        <dc:Bounds height="80" width="180" x="160" y="100" />
+      </dmndi:DMNShape>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</definitions>

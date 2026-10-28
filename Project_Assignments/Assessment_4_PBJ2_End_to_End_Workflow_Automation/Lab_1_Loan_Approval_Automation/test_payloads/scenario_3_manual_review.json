@@ -1,0 +1,29 @@
+{
+  "testScenario": "Lab 1 - Scenario 3: Application Requiring Manual Review",
+  "description": "Near-prime applicant with credit score 660 and loan $45,000. DMN classifies as Manual Review, creating a Tasklist user task for underwriter review.",
+  "variables": {
+    "applicantId": "APP-REVIEW-303",
+    "applicantName": "Sarah Jenkins",
+    "requestedAmount": 45000,
+    "monthlyIncome": 5500,
+    "existingMonthlyDebt": 2200,
+    "simulateWorkerFailure": false,
+    "simulateApiTimeout": false
+  },
+  "tasklistSimulation": {
+    "assignedGroup": "loan-underwriters",
+    "humanAction": "Complete User Task in Tasklist",
+    "formInputs": {
+      "reviewDecision": "Approved",
+      "reviewerNotes": "Verified additional proof of secondary liquid savings; approved with risk premium."
+    }
+  },
+  "expectedOutcome": {
+    "applicantValid": true,
+    "debtToIncomeRatio": 40.0,
+    "creditScore": 660,
+    "decision": "Manual Review",
+    "reviewDecision": "Approved",
+    "finalState": "Loan Approved and Disbursed"
+  }
+}

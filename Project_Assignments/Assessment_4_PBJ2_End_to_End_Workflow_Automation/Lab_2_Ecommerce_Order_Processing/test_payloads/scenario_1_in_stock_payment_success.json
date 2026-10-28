@@ -1,0 +1,25 @@
+{
+  "testScenario": "Lab 2 - Scenario 1: Stock Available and Payment Succeeds",
+  "description": "Standard order with in-stock item (PROD-LAPTOP-01), quantity 2, total $2,400. Stock verified, priority determined as HIGH (Platinum customer), payment processed successfully, and order fulfilled.",
+  "variables": {
+    "orderId": "ORD-2026-101",
+    "customerReference": "CUST-PLATINUM-99",
+    "customerCategory": "PLATINUM",
+    "productId": "PROD-LAPTOP-01",
+    "quantity": 2,
+    "unitPrice": 1200.0,
+    "deliveryPreference": "EXPRESS",
+    "paymentToken": "tok_visa_valid_9988",
+    "simulateWorkerFailure": false,
+    "simulatePaymentError": false
+  },
+  "expectedOutcome": {
+    "orderValid": true,
+    "stockStatus": "IN_STOCK",
+    "orderTotal": 2400.0,
+    "orderPriority": "HIGH",
+    "manualReviewRequired": false,
+    "paymentStatus": "SUCCESS",
+    "finalState": "Order Fulfilled Successfully"
+  }
+}
