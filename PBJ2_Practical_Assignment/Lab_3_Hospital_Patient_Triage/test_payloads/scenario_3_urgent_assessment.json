@@ -1,0 +1,33 @@
+{
+  "testScenario": "Lab 3 - Scenario 3: Urgent-Assessment Category Routed to Immediate Human Assessment",
+  "description": "Patient presenting with acute crushing chest pain (hasChestPain = true, pain scale 9). DMN categorizes as Urgent Assessment (SLA 10 minutes). Bypasses scheduling queues and routes directly to Emergency Clinical Assessment in Tasklist.",
+  "variables": {
+    "patientReference": "PAT-2026-003-URGENT",
+    "patientName": "Robert Hawthorne",
+    "age": 61,
+    "appointmentPreference": "CARDIOLOGY",
+    "symptomsSummary": "Substernal radiating chest pain radiating to left arm with diaphoresis.",
+    "hasChestPain": true,
+    "hasBreathingDifficulty": true,
+    "painScale": 9,
+    "feverTemperature": 37.0,
+    "simulateWorkerFailure": false,
+    "simulateApiFailure": false
+  },
+  "tasklistSimulation": {
+    "assignedGroup": "emergency-clinical-staff",
+    "humanAction": "Complete Immediate Emergency Clinical Assessment User Task",
+    "formInputs": {
+      "resuscitationCode": "CODE_BLUE_ACTIVE",
+      "immediateTreatmentGiven": "Sublingual nitroglycerin, oxygen therapy, and 12-lead ECG initiated.",
+      "admissionWard": "CARDIAC_ICU"
+    }
+  },
+  "expectedOutcome": {
+    "registrationValid": true,
+    "triageCategory": "Urgent Assessment",
+    "targetWaitMinutes": 10,
+    "clinicalAction": "Immediate emergency cardiac resuscitation and telemetry",
+    "finalState": "Emergency Resuscitation & Admission"
+  }
+}

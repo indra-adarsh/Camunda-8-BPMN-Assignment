@@ -1,0 +1,32 @@
+{
+  "testScenario": "Lab 3 - Scenario 2: Request Routed for Priority Staff Review",
+  "description": "Patient with high fever (39.4°C) and moderate pain (scale 6). DMN categorizes as Priority Review (SLA 45 minutes). Routes to triage nursing officers for manual review before appointment slot allocation.",
+  "variables": {
+    "patientReference": "PAT-2026-002",
+    "patientName": "Clara Oswald",
+    "age": 29,
+    "appointmentPreference": "INFECTIOUS_DISEASE",
+    "symptomsSummary": "Acute onset of high fever, chills, and localized abdominal tenderness for 48 hours.",
+    "hasChestPain": false,
+    "hasBreathingDifficulty": false,
+    "painScale": 6,
+    "feverTemperature": 39.4,
+    "simulateWorkerFailure": false,
+    "simulateApiFailure": false
+  },
+  "tasklistSimulation": {
+    "assignedGroup": "triage-nursing-officers",
+    "humanAction": "Complete Authorised Staff Priority Review User Task",
+    "formInputs": {
+      "clinicalReviewNotes": "Triage verified; fast-tracked for same-day infectious disease outpatient evaluation.",
+      "staffApproval": true
+    }
+  },
+  "expectedOutcome": {
+    "registrationValid": true,
+    "triageCategory": "Priority Review",
+    "targetWaitMinutes": 45,
+    "slotsAvailable": true,
+    "finalState": "Appointment Confirmed & Scheduled"
+  }
+}

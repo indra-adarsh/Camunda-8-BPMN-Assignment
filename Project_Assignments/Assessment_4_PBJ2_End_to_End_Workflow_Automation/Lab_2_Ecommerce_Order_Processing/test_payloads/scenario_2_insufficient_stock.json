@@ -1,0 +1,22 @@
+{
+  "testScenario": "Lab 2 - Scenario 2: Stock Insufficient and Cannot Proceed",
+  "description": "Order placed for item with zero inventory (PROD-OUT-OF-STOCK). Worker detects stock deficiency, routes via Gateway_StockCheck to out-of-stock notification and termination.",
+  "variables": {
+    "orderId": "ORD-2026-202",
+    "customerReference": "CUST-GOLD-44",
+    "customerCategory": "GOLD",
+    "productId": "PROD-OUT-OF-STOCK",
+    "quantity": 10,
+    "unitPrice": 150.0,
+    "deliveryPreference": "OVERNIGHT",
+    "paymentToken": "tok_visa_valid_1234",
+    "simulateWorkerFailure": false,
+    "simulatePaymentError": false
+  },
+  "expectedOutcome": {
+    "orderValid": true,
+    "stockStatus": "OUT_OF_STOCK",
+    "availableStock": 0,
+    "finalState": "Order Cancelled (Out of Stock)"
+  }
+}

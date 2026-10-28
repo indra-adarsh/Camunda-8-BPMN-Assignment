@@ -1,0 +1,24 @@
+{
+  "testScenario": "Lab 2 - Scenario 3: Payment Declined by Mock Service",
+  "description": "Stock is confirmed available, but mock payment gateway returns DECLINED due to synthetic insufficient funds token (tok_declined_insufficient_funds).",
+  "variables": {
+    "orderId": "ORD-2026-303",
+    "customerReference": "CUST-REGULAR-12",
+    "customerCategory": "REGULAR",
+    "productId": "PROD-HEADPHONES-05",
+    "quantity": 1,
+    "unitPrice": 250.0,
+    "deliveryPreference": "STANDARD",
+    "paymentToken": "tok_declined_insufficient_funds",
+    "simulateWorkerFailure": false,
+    "simulatePaymentError": false
+  },
+  "expectedOutcome": {
+    "orderValid": true,
+    "stockStatus": "IN_STOCK",
+    "orderTotal": 250.0,
+    "paymentStatus": "DECLINED",
+    "paymentMessage": "Card declined: Insufficient funds in synthetic bank account",
+    "finalState": "Order Cancelled (Payment Declined)"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "testScenario": "Lab 1 - Scenario 2: Application Failing Eligibility Criteria",
+  "description": "Subprime applicant with low credit score (560) below the 620 minimum underwriting threshold. Expects automated rejection.",
+  "variables": {
+    "applicantId": "APP-SUBPRIME-202",
+    "applicantName": "Marcus Vance",
+    "requestedAmount": 25000,
+    "monthlyIncome": 4000,
+    "existingMonthlyDebt": 1200,
+    "simulateWorkerFailure": false,
+    "simulateApiTimeout": false
+  },
+  "expectedOutcome": {
+    "applicantValid": true,
+    "debtToIncomeRatio": 30.0,
+    "creditScore": 560,
+    "decision": "Rejected",
+    "decisionReason": "Credit score is below the minimum institutional underwriting threshold of 620",
+    "finalState": "Loan Rejected"
+  }
+}

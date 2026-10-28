@@ -1,0 +1,28 @@
+{
+  "testScenario": "Lab 3 - Scenario 5: Scheduling API Failure and Incident Recovery",
+  "description": "Simulates hospital scheduling API server failing (HTTP 503 Service Unavailable). Zeebe REST connector triggers incident in Operate. Operator diagnoses downtime, remedies endpoint, and retries incident to successful appointment confirmation.",
+  "variables": {
+    "patientReference": "PAT-2026-005-FAIL",
+    "patientName": "Liam Gallagher",
+    "age": 50,
+    "appointmentPreference": "ORTHOPEDICS",
+    "symptomsSummary": "Post-sprain ankle evaluation.",
+    "hasChestPain": false,
+    "hasBreathingDifficulty": false,
+    "painScale": 4,
+    "feverTemperature": 36.9,
+    "simulateWorkerFailure": false,
+    "simulateApiFailure": true
+  },
+  "operateIncidentInspection": {
+    "activityId": "Activity_QueryAppointmentSlotsREST",
+    "incidentType": "CONNECTOR_HTTP_ERROR",
+    "errorMessage": "REST Connector returned HTTP 503 Service Unavailable: Mock scheduling subsystem is temporarily offline",
+    "incidentResolution": {
+      "rootCause": "Scheduling subsystem simulated outage.",
+      "correctiveAction": "Toggle simulateApiFailure=false in payload or restore mock scheduling controller.",
+      "retryAction": "Trigger Retry Incident in Camunda 8 Operate.",
+      "expectedPostRecoveryState": "Available slot retrieved (SLOT-ORTHO-1145), token proceeds to Activity_ConfirmBooking and finishes successfully."
+    }
+  }
+}

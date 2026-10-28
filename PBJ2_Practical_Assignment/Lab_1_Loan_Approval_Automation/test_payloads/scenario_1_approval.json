@@ -1,0 +1,21 @@
+{
+  "testScenario": "Lab 1 - Scenario 1: Application Meeting Approval Criteria",
+  "description": "Prime applicant with high credit score (780), low DTI ratio (25%), and requested loan $35,000. Expects automated approval and disbursement.",
+  "variables": {
+    "applicantId": "APP-PRIME-101",
+    "applicantName": "Johnathan Miller",
+    "requestedAmount": 35000,
+    "monthlyIncome": 8000,
+    "existingMonthlyDebt": 2000,
+    "simulateWorkerFailure": false,
+    "simulateApiTimeout": false
+  },
+  "expectedOutcome": {
+    "applicantValid": true,
+    "debtToIncomeRatio": 25.0,
+    "creditScore": 780,
+    "decision": "Approved",
+    "interestRate": 5.5,
+    "finalState": "Loan Approved and Disbursed"
+  }
+}

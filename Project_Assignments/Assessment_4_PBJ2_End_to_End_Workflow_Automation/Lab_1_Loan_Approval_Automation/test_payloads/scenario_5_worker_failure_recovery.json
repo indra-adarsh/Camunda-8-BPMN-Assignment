@@ -1,0 +1,24 @@
+{
+  "testScenario": "Lab 1 - Scenario 5: Worker Failure Followed by Correction and Recovery",
+  "description": "External job worker throws simulated unhandled exception due to temporary database downtime or unparsed payload. An incident is created in Operate, resolved, and retried successfully.",
+  "variables": {
+    "applicantId": "APP-FAIL-RECOVER-505",
+    "applicantName": "Carlos Mendoza",
+    "requestedAmount": 20000,
+    "monthlyIncome": 5000,
+    "existingMonthlyDebt": 1000,
+    "simulateWorkerFailure": true,
+    "simulateApiTimeout": false
+  },
+  "operateIncidentInspection": {
+    "incidentType": "JOB_RETRIES_EXHAUSTED / UNHANDLED_WORKER_EXCEPTION",
+    "activityId": "Activity_ValidateApplicant",
+    "errorMessage": "Worker validate-loan-applicant threw RuntimeException: Simulated worker database connectivity failure",
+    "incidentResolution": {
+      "rootCause": "Database connection pool timeout simulated on worker node.",
+      "correctiveAction": "Toggle simulateWorkerFailure=false in payload / variable editor in Operate or restart worker service.",
+      "retryAction": "Trigger Retry Incident in Camunda 8 Operate.",
+      "expectedPostRecoveryState": "Worker completes validation, token progresses to Credit Assessment and completes approval."
+    }
+  }
+}

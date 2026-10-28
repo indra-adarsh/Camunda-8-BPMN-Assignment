@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:dc="http://www.omg.org/spec/DMN/20180521/DC/" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_PatientTriage" name="Patient Triage DRD" namespace="http://camunda.org/schema/1.0/dmn" exporter="Camunda Modeler" exporterVersion="5.49.0" modeler:executionPlatform="Camunda Cloud" modeler:executionPlatformVersion="8.5.0">
+  <decision id="decision_patient_triage" name="Patient Clinical Triage Classification">
+    <decisionTable id="DecisionTable_PatientTriage" hitPolicy="UNIQUE">
+      <input id="Input_hasChestPain" label="Severe Chest Pain?">
+        <inputExpression id="InputExpr_hasChestPain" typeRef="boolean">
+          <text>hasChestPain</text>
+        </inputExpression>
+      </input>
+      <input id="Input_hasBreathingDifficulty" label="Acute Breathing Difficulty?">
+        <inputExpression id="InputExpr_hasBreathingDifficulty" typeRef="boolean">
+          <text>hasBreathingDifficulty</text>
+        </inputExpression>
+      </input>
+      <input id="Input_painScale" label="Reported Pain Scale (1-10)">
+        <inputExpression id="InputExpr_painScale" typeRef="number">
+          <text>painScale</text>
+        </inputExpression>
+      </input>
+      <input id="Input_feverTemperature" label="Body Temperature (°C)">
+        <inputExpression id="InputExpr_feverTemperature" typeRef="number">
+          <text>feverTemperature</text>
+        </inputExpression>
+      </input>
+      
+      <output id="Output_triageCategory" label="Triage Category" name="triageCategory" typeRef="string" />
+      <output id="Output_targetWaitMinutes" label="Target Wait Time (Minutes)" name="targetWaitMinutes" typeRef="number" />
+      <output id="Output_clinicalAction" label="Clinical Action Protocol" name="clinicalAction" typeRef="string" />
+
+      <rule id="Rule_CardiacUrgent">
+        <description>Acute chest pain indicates potential cardiac event</description>
+        <inputEntry id="Unary_1_1">
+          <text>true</text>
+        </inputEntry>
+        <inputEntry id="Unary_1_2">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="Unary_1_3">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="Unary_1_4">
+          <text>-</text>
+        </inputEntry>
+        <outputEntry id="Lit_1_1">
+          <text>&#34;Urgent Assessment&#34;</text>
+        </outputEntry>
+        <outputEntry id="Lit_1_2">
+          <text>10</text>
+        </outputEntry>
+        <outputEntry id="Lit_1_3">
+          <text>&#34;Immediate emergency cardiac resuscitation and telemetry&#34;</text>
+        </outputEntry>
+      </rule>
+
+      <rule id="Rule_RespiratoryUrgent">
+        <description>Severe dyspnea requires immediate critical airway assessment</description>
+        <inputEntry id="Unary_2_1">
+          <text>false</text>
+        </inputEntry>
+        <inputEntry id="Unary_2_2">
+          <text>true</text>
+        </inputEntry>
+        <inputEntry id="Unary_2_3">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="Unary_2_4">
+          <text>-</text>
+        </inputEntry>
+        <outputEntry id="Lit_2_1">
+          <text>&#34;Urgent Assessment&#34;</text>
+        </outputEntry>
+        <outputEntry id="Lit_2_2">
+          <text>15</text>
+        </outputEntry>
+        <outputEntry id="Lit_2_3">
+          <text>&#34;Immediate acute respiratory critical care triage&#34;</text>
+        </outputEntry>
+      </rule>
+
+      <rule id="Rule_SeverePainPriority">
+        <description>High pain score without chest/respiratory indicators</description>
+        <inputEntry id="Unary_3_1">
+          <text>false</text>
+        </inputEntry>
+        <inputEntry id="Unary_3_2">
+          <text>false</text>
+        </inputEntry>
+        <inputEntry id="Unary_3_3">
+          <text>&gt;= 8</text>
+        </inputEntry>
+        <inputEntry id="Unary_3_4">
+          <text>-</text>
+        </inputEntry>
+        <outputEntry id="Lit_3_1">
+          <text>&#34;Priority Review&#34;</text>
+        </outputEntry>
+        <outputEntry id="Lit_3_2">
+          <text>30</text>
+        </outputEntry>
+        <outputEntry id="Lit_3_3">
+          <text>&#34;Severe acute pain protocol requiring priority clinical evaluation&#34;</text>
+        </outputEntry>
+      </rule>
+
+      <rule id="Rule_HighFeverModeratePainPriority">
+        <description>High fever accompanied by moderate pain</description>
+        <inputEntry id="Unary_4_1">
+          <text>false</text>
+        </inputEntry>
+        <inputEntry id="Unary_4_2">
+          <text>false</text>
+        </inputEntry>
+        <inputEntry id="Unary_4_3">
+          <text>[5..7]</text>
+        </inputEntry>
+        <inputEntry id="Unary_4_4">
+          <text>&gt;= 39.0</text>
+        </inputEntry>
+        <outputEntry id="Lit_4_1">
+          <text>&#34;Priority Review&#34;</text>
+        </outputEntry>
+        <outputEntry id="Lit_4_2">
+          <text>45</text>
+        </outputEntry>
+        <outputEntry id="Lit_4_3">
+          <text>&#34;High febrile state with moderate distress requires urgent physician review&#34;</text>
+        </outputEntry>
+      </rule>
+
+      <rule id="Rule_ModeratePainPriority">
+        <description>Moderate pain with normal/mild temperature</description>
+        <inputEntry id="Unary_5_1">
+          <text>false</text>
+        </inputEntry>
+        <inputEntry id="Unary_5_2">
+          <text>false</text>
+        </inputEntry>
+        <inputEntry id="Unary_5_3">
+          <text>[5..7]</text>
+        </inputEntry>
+        <inputEntry id="Unary_5_4">
+          <text>&lt; 39.0</text>
+        </inputEntry>
+        <outputEntry id="Lit_5_1">
+          <text>&#34;Priority Review&#34;</text>
+        </outputEntry>
+        <outputEntry id="Lit_5_2">
+          <text>60</text>
+        </outputEntry>
+        <outputEntry id="Lit_5_3">
+          <text>&#34;Moderate acuity triage scheduled for expedited same-day consultation&#34;</text>
+        </outputEntry>
+      </rule>
+
+      <rule id="Rule_HighFeverMildPainPriority">
+        <description>High fever with low pain</description>
+        <inputEntry id="Unary_6_1">
+          <text>false</text>
+        </inputEntry>
+        <inputEntry id="Unary_6_2">
+          <text>false</text>
+        </inputEntry>
+        <inputEntry id="Unary_6_3">
+          <text>&lt; 5</text>
+        </inputEntry>
+        <inputEntry id="Unary_6_4">
+          <text>&gt;= 39.0</text>
+        </inputEntry>
+        <outputEntry id="Lit_6_1">
+          <text>&#34;Priority Review&#34;</text>
+        </outputEntry>
+        <outputEntry id="Lit_6_2">
+          <text>60</text>
+        </outputEntry>
+        <outputEntry id="Lit_6_3">
+          <text>&#34;Isolated high pyrexia requiring fast-track clinical evaluation&#34;</text>
+        </outputEntry>
+      </rule>
+
+      <rule id="Rule_RoutineOutpatient">
+        <description>Stable non-urgent patient presentation</description>
+        <inputEntry id="Unary_7_1">
+          <text>false</text>
+        </inputEntry>
+        <inputEntry id="Unary_7_2">
+          <text>false</text>
+        </inputEntry>
+        <inputEntry id="Unary_7_3">
+          <text>&lt; 5</text>
+        </inputEntry>
+        <inputEntry id="Unary_7_4">
+          <text>&lt; 39.0</text>
+        </inputEntry>
+        <outputEntry id="Lit_7_1">
+          <text>&#34;Routine&#34;</text>
+        </outputEntry>
+        <outputEntry id="Lit_7_2">
+          <text>120</text>
+        </outputEntry>
+        <outputEntry id="Lit_7_3">
+          <text>&#34;Stable non-urgent clinical presentation scheduled for standard outpatient slot&#34;</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="DMNDiagram_PatientTriage">
+      <dmndi:DMNShape id="DMNShape_decision_patient_triage" dmnElementRef="decision_patient_triage">
+        <dc:Bounds height="80" width="180" x="160" y="100" />
+      </dmndi:DMNShape>
+    </dmndi:DMNDiagram>
+  </dmndi:DMNDI>
+</definitions>

@@ -1,0 +1,26 @@
+{
+  "testScenario": "Lab 3 - Scenario 1: Routine Request with Available Appointment Slot",
+  "description": "Stable non-urgent patient registration for General Medicine (fever 37.2°C, pain scale 2, no chest pain/breathing difficulty). Triage classified as Routine. Slot query returns available slot and booking is confirmed.",
+  "variables": {
+    "patientReference": "PAT-2026-001",
+    "patientName": "Arthur Pendelton",
+    "age": 42,
+    "appointmentPreference": "GENERAL_MEDICINE",
+    "symptomsSummary": "Mild seasonal allergy and routine annual physical examination checkup.",
+    "hasChestPain": false,
+    "hasBreathingDifficulty": false,
+    "painScale": 2,
+    "feverTemperature": 37.2,
+    "simulateWorkerFailure": false,
+    "simulateApiFailure": false
+  },
+  "expectedOutcome": {
+    "registrationValid": true,
+    "normalizedDepartment": "GENERAL_MEDICINE",
+    "triageCategory": "Routine",
+    "targetWaitMinutes": 120,
+    "slotsAvailable": true,
+    "slotId": "SLOT-GM-1030",
+    "finalState": "Appointment Confirmed & Scheduled"
+  }
+}
