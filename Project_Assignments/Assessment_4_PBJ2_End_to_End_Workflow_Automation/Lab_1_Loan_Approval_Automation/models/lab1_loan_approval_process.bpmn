@@ -8,19 +8,23 @@
     </bpmn:startEvent>
 
     <!-- Java Spring Boot External Job Worker (Requirement 3) -->
-    <bpmn:serviceTask id="Activity_ValidateApplicant" name="Validate Applicant Information">
+    <bpmn:serviceTask id="Activity_ValidateApplicant" name="Validate Applicant Information (REST Connector)" zeebe:modelerTemplate="io.camunda.connectors.HttpJson.v2" zeebe:modelerTemplateVersion="13">
       <bpmn:extensionElements>
-        <zeebe:taskDefinition type="validate-loan-applicant" retries="3" />
+        <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
         <zeebe:ioMapping>
-          <zeebe:input source="= applicantId" target="applicantId" />
-          <zeebe:input source="= applicantName" target="applicantName" />
-          <zeebe:input source="= requestedAmount" target="requestedAmount" />
-          <zeebe:input source="= monthlyIncome" target="monthlyIncome" />
-          <zeebe:input source="= existingMonthlyDebt" target="existingMonthlyDebt" />
-          <zeebe:output source="= applicantValid" target="applicantValid" />
-          <zeebe:output source="= debtToIncomeRatio" target="debtToIncomeRatio" />
-          <zeebe:output source="= validationNotes" target="validationNotes" />
+          <zeebe:input source="http://localhost:8080/api/applicant/validate" target="url" />
+          <zeebe:input source="post" target="method" />
+          <zeebe:input source="noAuth" target="authentication.type" />
+          <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="={&quot;Content-Type&quot;: &quot;application/json&quot;}" target="headers" />
+          <zeebe:input source="={applicantId: applicantId, applicantName: applicantName, requestedAmount: requestedAmount, monthlyIncome: monthlyIncome, existingMonthlyDebt: existingMonthlyDebt, simulateWorkerFailure: simulateWorkerFailure}" target="body" />
+          <zeebe:output source="= body.applicantValid" target="applicantValid" />
+          <zeebe:output source="= body.debtToIncomeRatio" target="debtToIncomeRatio" />
+          <zeebe:output source="= body.validationNotes" target="validationNotes" />
         </zeebe:ioMapping>
+        <zeebe:taskHeaders>
+          <zeebe:header key="resultVariable" value="applicantValidationResponse" />
+        </zeebe:taskHeaders>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_ToValidateApplicant</bpmn:incoming>
       <bpmn:outgoing>Flow_ToValidationCheck</bpmn:outgoing>

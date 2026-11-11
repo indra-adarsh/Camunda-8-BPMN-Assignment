@@ -8,22 +8,24 @@
     </bpmn:startEvent>
 
     <!-- Java Spring Boot Job Worker: Validation & Inventory Check (Requirement 3) -->
-    <bpmn:serviceTask id="Activity_ValidateAndCheckInventory" name="Validate Order &amp; Check Inventory">
+    <bpmn:serviceTask id="Activity_ValidateAndCheckInventory" name="Validate Order &amp; Check Inventory (REST Connector)" zeebe:modelerTemplate="io.camunda.connectors.HttpJson.v2" zeebe:modelerTemplateVersion="13">
       <bpmn:extensionElements>
-        <zeebe:taskDefinition type="validate-order-inventory" retries="3" />
+        <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
         <zeebe:ioMapping>
-          <zeebe:input source="= orderId" target="orderId" />
-          <zeebe:input source="= customerReference" target="customerReference" />
-          <zeebe:input source="= customerCategory" target="customerCategory" />
-          <zeebe:input source="= productId" target="productId" />
-          <zeebe:input source="= quantity" target="quantity" />
-          <zeebe:input source="= unitPrice" target="unitPrice" />
-          <zeebe:input source="= deliveryPreference" target="deliveryPreference" />
-          <zeebe:output source="= orderValid" target="orderValid" />
-          <zeebe:output source="= stockStatus" target="stockStatus" />
-          <zeebe:output source="= availableStock" target="availableStock" />
-          <zeebe:output source="= orderTotal" target="orderTotal" />
+          <zeebe:input source="http://localhost:8080/api/order/validate" target="url" />
+          <zeebe:input source="post" target="method" />
+          <zeebe:input source="noAuth" target="authentication.type" />
+          <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="={&quot;Content-Type&quot;: &quot;application/json&quot;}" target="headers" />
+          <zeebe:input source="={orderId: orderId, customerReference: customerReference, customerCategory: customerCategory, productId: productId, quantity: quantity, unitPrice: unitPrice, deliveryPreference: deliveryPreference, simulateWorkerFailure: simulateWorkerFailure}" target="body" />
+          <zeebe:output source="= body.orderValid" target="orderValid" />
+          <zeebe:output source="= body.stockStatus" target="stockStatus" />
+          <zeebe:output source="= body.availableStock" target="availableStock" />
+          <zeebe:output source="= body.orderTotal" target="orderTotal" />
         </zeebe:ioMapping>
+        <zeebe:taskHeaders>
+          <zeebe:header key="resultVariable" value="orderValidationResponse" />
+        </zeebe:taskHeaders>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_ToValidateOrder</bpmn:incoming>
       <bpmn:outgoing>Flow_ToStockCheckGateway</bpmn:outgoing>

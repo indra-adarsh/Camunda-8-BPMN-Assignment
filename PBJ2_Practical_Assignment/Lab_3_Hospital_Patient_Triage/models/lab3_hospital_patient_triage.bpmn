@@ -8,24 +8,24 @@
     </bpmn:startEvent>
 
     <!-- Java Spring Boot Worker: Validate Registration (Requirement 3) -->
-    <bpmn:serviceTask id="Activity_ValidatePatientRegistration" name="Validate Patient Registration">
+    <bpmn:serviceTask id="Activity_ValidatePatientRegistration" name="Validate Patient Registration (REST Connector)" zeebe:modelerTemplate="io.camunda.connectors.HttpJson.v2" zeebe:modelerTemplateVersion="13">
       <bpmn:extensionElements>
-        <zeebe:taskDefinition type="validate-patient-registration" retries="3" />
+        <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
         <zeebe:ioMapping>
-          <zeebe:input source="= patientReference" target="patientReference" />
-          <zeebe:input source="= patientName" target="patientName" />
-          <zeebe:input source="= age" target="age" />
-          <zeebe:input source="= appointmentPreference" target="appointmentPreference" />
-          <zeebe:input source="= symptomsSummary" target="symptomsSummary" />
-          <zeebe:input source="= hasChestPain" target="hasChestPain" />
-          <zeebe:input source="= hasBreathingDifficulty" target="hasBreathingDifficulty" />
-          <zeebe:input source="= painScale" target="painScale" />
-          <zeebe:input source="= feverTemperature" target="feverTemperature" />
-          <zeebe:output source="= registrationValid" target="registrationValid" />
-          <zeebe:output source="= normalizedDepartment" target="normalizedDepartment" />
-          <zeebe:output source="= urgencyScore" target="urgencyScore" />
-          <zeebe:output source="= validationNotes" target="validationNotes" />
+          <zeebe:input source="http://localhost:8080/api/patient/validate" target="url" />
+          <zeebe:input source="post" target="method" />
+          <zeebe:input source="noAuth" target="authentication.type" />
+          <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="={&quot;Content-Type&quot;: &quot;application/json&quot;}" target="headers" />
+          <zeebe:input source="={patientReference: patientReference, patientName: patientName, age: age, appointmentPreference: appointmentPreference, symptomsSummary: symptomsSummary, hasChestPain: hasChestPain, hasBreathingDifficulty: hasBreathingDifficulty, painScale: painScale, feverTemperature: feverTemperature, simulateWorkerFailure: simulateWorkerFailure}" target="body" />
+          <zeebe:output source="= body.registrationValid" target="registrationValid" />
+          <zeebe:output source="= body.normalizedDepartment" target="normalizedDepartment" />
+          <zeebe:output source="= body.urgencyScore" target="urgencyScore" />
+          <zeebe:output source="= body.validationNotes" target="validationNotes" />
         </zeebe:ioMapping>
+        <zeebe:taskHeaders>
+          <zeebe:header key="resultVariable" value="patientValidationResponse" />
+        </zeebe:taskHeaders>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_ToValidateRegistration</bpmn:incoming>
       <bpmn:outgoing>Flow_ToRegistrationCheckGateway</bpmn:outgoing>
