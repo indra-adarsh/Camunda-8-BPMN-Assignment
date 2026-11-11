@@ -7,7 +7,7 @@ setlocal EnableDelayedExpansion
 :: 1. Sets JAVA_HOME to c8run bundled JRE / JDK
 :: 2. Auto-configures Camunda Modeler contactPoint to http://localhost:26500
 :: 3. Starts c8run (Zeebe, Connectors, Operate, Tasklist) in dedicated console
-:: 4. Waits for local cluster (port 26500 and 8080) to respond
+:: 4. Fast-checks local cluster (port 26500 and 8080) with pure TCP (no ICMP delay)
 :: 5. Launches Camunda Modeler with all BPMN & DMN models loaded
 :: 6. Shows GREEN TICK on "c8run (local)" in Camunda Modeler status bar!
 :: 7. Launches Spring Boot External Workers & Mock REST Endpoints
@@ -47,7 +47,7 @@ echo [2/7] Locating c8run and Java runtime...
 set "C8RUN_DIR="
 set "C8RUN_EXE="
 
-:: Check repo root c8run-8.10.9 or c8run*
+:: 1. Prioritize repo-local c8run-8.10.9 if present
 if exist "%~dp0..\..\c8run-8.10.9\c8run.exe" (
     set "C8RUN_DIR=%~dp0..\..\c8run-8.10.9"
     set "C8RUN_EXE=%~dp0..\..\c8run-8.10.9\c8run.exe"
@@ -59,20 +59,14 @@ if exist "%~dp0c8run-8.10.9\c8run.exe" (
     goto :found_c8run
 )
 
-for /d %%d in ("%~dp0..\..\c8run*") do (
-    if exist "%%d\c8run.exe" (
-        set "C8RUN_DIR=%%d"
-        set "C8RUN_EXE=%%d\c8run.exe"
-        goto :found_c8run
-    )
-)
-
+:: 2. Check Downloads c8run-8.8
 if exist "%USERPROFILE%\Downloads\camunda8-run-8.8-windows-x86_64\c8run-8.8.32\c8run.exe" (
     set "C8RUN_DIR=%USERPROFILE%\Downloads\camunda8-run-8.8-windows-x86_64\c8run-8.8.32"
     set "C8RUN_EXE=%USERPROFILE%\Downloads\camunda8-run-8.8-windows-x86_64\c8run-8.8.32\c8run.exe"
     goto :found_c8run
 )
 
+:: 3. Scan wildcard paths
 for /d %%d in ("%USERPROFILE%\Downloads\camunda8-run*") do (
     for /d %%s in ("%%d\c8run*") do (
         if exist "%%s\c8run.exe" (
@@ -80,6 +74,14 @@ for /d %%d in ("%USERPROFILE%\Downloads\camunda8-run*") do (
             set "C8RUN_EXE=%%s\c8run.exe"
             goto :found_c8run
         )
+    )
+)
+
+for /d %%d in ("%~dp0..\..\c8run*") do (
+    if exist "%%d\c8run.exe" (
+        set "C8RUN_DIR=%%d"
+        set "C8RUN_EXE=%%d\c8run.exe"
+        goto :found_c8run
     )
 )
 
@@ -114,25 +116,29 @@ echo   - Zeebe gRPC:  http://localhost:26500
 echo   - Operate:     http://localhost:8080/operate
 echo   - Tasklist:    http://localhost:8080/tasklist
 
-start "Camunda 8 Run (c8run local)" cmd /k "cd /d ""%C8RUN_DIR%"" && set ""JAVA_HOME=%JAVA_HOME%"" && set ""PATH=%JAVA_HOME%\bin;%%PATH%%"" && c8run.exe start --no-browser"
+start "Camunda 8 Run (c8run local)" cmd /k "cd /d ""%C8RUN_DIR%"" && set ""JAVA_HOME=%JAVA_HOME%"" && set ""PATH=%JAVA_HOME%\bin;%%PATH%%"" && c8run.exe start"
 
 :: ------------------------------------------------------------------------------
-:: STEP 4: Wait for c8run cluster to become responsive
+:: STEP 4: Wait for c8run cluster to become responsive (Fast TCP socket check)
 :: ------------------------------------------------------------------------------
 echo.
 echo [4/7] Waiting for c8run cluster to be ready (usually ~15-30 seconds)...
 set /a ATTEMPTS=0
 :wait_loop
 set /a ATTEMPTS+=1
+
 powershell -NoProfile -Command ^
-    "$t = Test-NetConnection -ComputerName 127.0.0.1 -Port 26500 -WarningAction SilentlyContinue; if ($t.TcpTestSucceeded) { exit 0 } else { exit 1 }" >nul 2>&1
+    "$t = New-Object System.Net.Sockets.TcpClient;" ^
+    "try { $t.Connect('127.0.0.1', 26500); exit 0 } catch { exit 1 } finally { $t.Dispose() }" >nul 2>&1
 
 if %ERRORLEVEL% equ 0 (
+    echo.
     echo   - [OK] Zeebe broker is ONLINE and listening on port 26500!
     goto :cluster_ready
 )
 
-if %ATTEMPTS% geq 45 (
+if %ATTEMPTS% geq 60 (
+    echo.
     echo   - [NOTE] Wait period completed. Proceeding to launch Modeler...
     goto :cluster_ready
 )
