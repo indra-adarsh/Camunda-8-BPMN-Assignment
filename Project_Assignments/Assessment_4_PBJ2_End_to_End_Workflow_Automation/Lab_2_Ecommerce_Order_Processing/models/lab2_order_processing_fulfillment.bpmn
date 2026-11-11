@@ -26,6 +26,7 @@
         </zeebe:ioMapping>
         <zeebe:taskHeaders>
           <zeebe:header key="resultVariable" value="orderValidationResponse" />
+          <zeebe:header key="resultExpression" value="={orderValid: response.body.orderValid, stockStatus: response.body.stockStatus, availableStock: response.body.availableStock, orderTotal: response.body.orderTotal}" />
         </zeebe:taskHeaders>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_ToValidateOrder</bpmn:incoming>
@@ -178,7 +179,6 @@
           <zeebe:output source="= paymentApiResponse.body.paymentStatus" target="paymentStatus" />
           <zeebe:output source="= paymentApiResponse.body.transactionId" target="transactionId" />
           <zeebe:output source="= paymentApiResponse.body.paymentMessage" target="paymentMessage" />
-          <zeebe:output source="= body" target="paymentApiResponse" />
         </zeebe:ioMapping>
         <zeebe:taskHeaders>
           <zeebe:header key="resultVariable" value="paymentApiResponse" />
@@ -249,6 +249,7 @@
         </zeebe:ioMapping>
         <zeebe:taskHeaders>
           <zeebe:header key="resultVariable" value="fulfillmentResponse" />
+          <zeebe:header key="resultExpression" value="={fulfillmentStatus: response.body.fulfillmentStatus, trackingNumber: response.body.trackingNumber}" />
         </zeebe:taskHeaders>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_PaymentSuccess</bpmn:incoming>

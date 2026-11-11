@@ -152,6 +152,8 @@ const server = http.createServer(async (req, res) => {
             return sendJson(res, 200, {
                 orderId: orderId,
                 status: 'DECLINED',
+                paymentStatus: 'DECLINED',
+                paymentMessage: 'Card declined: Insufficient funds in synthetic bank account',
                 transactionId: null,
                 gatewayMessage: 'Card declined: Insufficient funds',
                 capturedAmount: 0.0
@@ -161,6 +163,8 @@ const server = http.createServer(async (req, res) => {
         return sendJson(res, 200, {
             orderId: orderId,
             status: 'SUCCESS',
+            paymentStatus: 'SUCCESS',
+            paymentMessage: 'Payment captured successfully via synthetic clearing house',
             transactionId: 'TXN-' + Math.random().toString(36).substring(2, 10).toUpperCase() + '-CONFIRMED',
             gatewayMessage: 'Payment captured successfully via clearing house',
             capturedAmount: body.orderTotal || 149.99
