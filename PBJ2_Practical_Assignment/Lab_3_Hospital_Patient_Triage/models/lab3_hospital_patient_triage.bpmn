@@ -16,6 +16,7 @@
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="20" target="readTimeoutInSeconds" />
           <zeebe:input source="={&quot;Content-Type&quot;: &quot;application/json&quot;}" target="headers" />
           <zeebe:input source="={patientReference: patientReference, patientName: patientName, age: age, appointmentPreference: appointmentPreference, symptomsSummary: symptomsSummary, hasChestPain: hasChestPain, hasBreathingDifficulty: hasBreathingDifficulty, painScale: painScale, feverTemperature: feverTemperature, simulateWorkerFailure: simulateWorkerFailure}" target="body" />
           <zeebe:output source="= body.registrationValid" target="registrationValid" />
@@ -56,6 +57,7 @@
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="20" target="readTimeoutInSeconds" />
           <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
           <zeebe:input source="={patientReference: patientReference, notificationType: &#34;REGISTRATION_ERROR&#34;, notes: validationNotes}" target="body" />
           <zeebe:output source="= body.notificationSent" target="notificationSent" />
@@ -158,6 +160,7 @@
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="20" target="readTimeoutInSeconds" />
           <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
           <zeebe:input source="={patientReference: patientReference, department: normalizedDepartment}" target="body" />
           <zeebe:output source="= body.slotsAvailable" target="slotsAvailable" />
@@ -200,6 +203,7 @@
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="20" target="readTimeoutInSeconds" />
           <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
           <zeebe:input source="={patientReference: patientReference, slotId: slotId, department: normalizedDepartment}" target="body" />
           <zeebe:output source="= body.bookingStatus" target="bookingStatus" />

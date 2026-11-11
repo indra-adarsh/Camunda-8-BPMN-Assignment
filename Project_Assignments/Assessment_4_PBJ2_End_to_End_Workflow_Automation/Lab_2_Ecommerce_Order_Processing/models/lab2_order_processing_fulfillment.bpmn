@@ -16,6 +16,7 @@
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="20" target="readTimeoutInSeconds" />
           <zeebe:input source="={&quot;Content-Type&quot;: &quot;application/json&quot;}" target="headers" />
           <zeebe:input source="={orderId: orderId, customerReference: customerReference, customerCategory: customerCategory, productId: productId, quantity: quantity, unitPrice: unitPrice, deliveryPreference: deliveryPreference, simulateWorkerFailure: simulateWorkerFailure}" target="body" />
           <zeebe:output source="= body.orderValid" target="orderValid" />
@@ -56,6 +57,7 @@
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="20" target="readTimeoutInSeconds" />
           <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
           <zeebe:input source="={orderId: orderId, notificationType: &#34;OUT_OF_STOCK&#34;, message: &#34;Requested inventory unavailable&#34;}" target="body" />
           <zeebe:output source="= body.notificationSent" target="notificationSent" />
@@ -143,6 +145,7 @@
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="20" target="readTimeoutInSeconds" />
           <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
           <zeebe:input source="={orderId: orderId, notificationType: &#34;ORDER_REJECTED_MANUAL_REVIEW&#34;, notes: reviewRemarks}" target="body" />
           <zeebe:output source="= body.notificationSent" target="notificationSent" />
@@ -169,6 +172,7 @@
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="20" target="readTimeoutInSeconds" />
           <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
           <zeebe:input source="={orderId: orderId, orderTotal: orderTotal, paymentToken: paymentToken}" target="body" />
           <zeebe:output source="= body.paymentStatus" target="paymentStatus" />
@@ -210,6 +214,7 @@
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="20" target="readTimeoutInSeconds" />
           <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
           <zeebe:input source="={orderId: orderId, notificationType: &#34;PAYMENT_DECLINED&#34;, message: paymentMessage}" target="body" />
           <zeebe:output source="= body.notificationSent" target="notificationSent" />
@@ -236,6 +241,7 @@
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="20" target="readTimeoutInSeconds" />
           <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
           <zeebe:input source="={orderId: orderId, customerReference: customerReference, orderTotal: orderTotal, priority: orderPriority}" target="body" />
           <zeebe:output source="= body.fulfillmentStatus" target="fulfillmentStatus" />

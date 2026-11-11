@@ -16,6 +16,7 @@
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="20" target="readTimeoutInSeconds" />
           <zeebe:input source="={&quot;Content-Type&quot;: &quot;application/json&quot;}" target="headers" />
           <zeebe:input source="={applicantId: applicantId, applicantName: applicantName, requestedAmount: requestedAmount, monthlyIncome: monthlyIncome, existingMonthlyDebt: existingMonthlyDebt, simulateWorkerFailure: simulateWorkerFailure}" target="body" />
           <zeebe:output source="= body.applicantValid" target="applicantValid" />
@@ -55,6 +56,7 @@
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="20" target="readTimeoutInSeconds" />
           <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
           <zeebe:input source="={applicantId: applicantId, notificationType: &#34;VALIDATION_FAILED&#34;, notes: validationNotes}" target="body" />
           <zeebe:output source="= body.notificationSent" target="notificationSent" />
@@ -81,6 +83,7 @@
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="20" target="readTimeoutInSeconds" />
           <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
           <zeebe:input source="={applicantId: applicantId, requestedAmount: requestedAmount, monthlyIncome: monthlyIncome}" target="body" />
           <zeebe:output source="= body.creditScore" target="creditScore" />
@@ -175,6 +178,7 @@
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="20" target="readTimeoutInSeconds" />
           <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
           <zeebe:input source="={applicantId: applicantId, amount: requestedAmount, interestRate: interestRate}" target="body" />
           <zeebe:output source="= body.disbursementStatus" target="disbursementStatus" />
@@ -203,6 +207,7 @@
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="20" target="readTimeoutInSeconds" />
           <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
           <zeebe:input source="={applicantId: applicantId, notificationType: &#34;LOAN_REJECTED&#34;, reason: decisionReason}" target="body" />
           <zeebe:output source="= body.notificationSent" target="notificationSent" />
