@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -59,6 +61,20 @@ public class HospitalSchedulingMockController {
         );
 
         log.info("Available slot confirmed: slotId={}, time={}", slotId, slotTime);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/confirm-booking")
+    public ResponseEntity<Map<String, Object>> confirmBooking(@RequestBody Map<String, Object> request) {
+        String patientRef = (String) request.getOrDefault("patientReference", "PAT-UNKNOWN");
+        String slotId = (String) request.getOrDefault("slotId", "SLOT-DEFAULT");
+        log.info("REST Outbound Connector booking confirmed for patient: {}, slot: {}", patientRef, slotId);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("patientReference", patientRef);
+        response.put("slotId", slotId);
+        response.put("bookingStatus", "CONFIRMED");
+        response.put("bookingConfirmationCode", "CONF-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         return ResponseEntity.ok(response);
     }
 }

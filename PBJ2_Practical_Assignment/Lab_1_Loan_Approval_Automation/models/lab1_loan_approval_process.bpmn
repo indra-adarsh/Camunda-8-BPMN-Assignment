@@ -7,7 +7,7 @@
       <bpmn:outgoing>Flow_ToValidateApplicant</bpmn:outgoing>
     </bpmn:startEvent>
 
-    <!-- Java Spring Boot External Job Worker -->
+    <!-- Java Spring Boot External Job Worker (Requirement 3) -->
     <bpmn:serviceTask id="Activity_ValidateApplicant" name="Validate Applicant Information">
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="validate-loan-applicant" retries="3" />
@@ -42,9 +42,22 @@
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= applicantValid = false</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
 
-    <bpmn:serviceTask id="Activity_NotifyValidationFailed" name="Notify Validation Failure">
+    <!-- REST Outbound Connector: Notify Validation Failure -->
+    <bpmn:serviceTask id="Activity_NotifyValidationFailed" name="Notify Validation Failure (REST Connector)" zeebe:modelerTemplate="io.camunda.connectors.HttpJson.v2" zeebe:modelerTemplateVersion="13">
       <bpmn:extensionElements>
-        <zeebe:taskDefinition type="notification-service" retries="3" />
+        <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
+        <zeebe:ioMapping>
+          <zeebe:input source="http://localhost:8080/api/notifications/send" target="url" />
+          <zeebe:input source="post" target="method" />
+          <zeebe:input source="noAuth" target="authentication.type" />
+          <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
+          <zeebe:input source="={applicantId: applicantId, notificationType: &#34;VALIDATION_FAILED&#34;, notes: validationNotes}" target="body" />
+          <zeebe:output source="= body.notificationSent" target="notificationSent" />
+        </zeebe:ioMapping>
+        <zeebe:taskHeaders>
+          <zeebe:header key="resultVariable" value="validationFailureNoticeResponse" />
+        </zeebe:taskHeaders>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_ValidationFailed</bpmn:incoming>
       <bpmn:outgoing>Flow_ToEndValidationFailed</bpmn:outgoing>
@@ -55,22 +68,26 @@
       <bpmn:incoming>Flow_ToEndValidationFailed</bpmn:incoming>
     </bpmn:endEvent>
 
-    <!-- REST Connector: Simulated Credit Assessment API -->
-    <bpmn:serviceTask id="Activity_CreditAssessmentREST" name="Credit Assessment REST Connector">
+    <!-- REST Outbound Connector: Simulated Credit Assessment API (Requirement 4) -->
+    <bpmn:serviceTask id="Activity_CreditAssessmentREST" name="Credit Assessment REST Connector" zeebe:modelerTemplate="io.camunda.connectors.HttpJson.v2" zeebe:modelerTemplateVersion="13">
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
-        <zeebe:taskHeaders>
-          <zeebe:header key="resultVariable" value="creditApiResponse" />
-        </zeebe:taskHeaders>
         <zeebe:ioMapping>
-          <zeebe:input source="POST" target="method" />
           <zeebe:input source="http://localhost:8080/api/credit/assess" target="url" />
+          <zeebe:input source="post" target="method" />
+          <zeebe:input source="noAuth" target="authentication.type" />
+          <zeebe:input source="20" target="connectionTimeoutInSeconds" />
           <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
           <zeebe:input source="={applicantId: applicantId, requestedAmount: requestedAmount, monthlyIncome: monthlyIncome}" target="body" />
-          <zeebe:output source="= creditApiResponse.creditScore" target="creditScore" />
-          <zeebe:output source="= creditApiResponse.riskScore" target="riskScore" />
-          <zeebe:output source="= creditApiResponse.creditAssessmentRemarks" target="creditAssessmentRemarks" />
+          <zeebe:output source="= body.creditScore" target="creditScore" />
+          <zeebe:output source="= body.riskScore" target="riskScore" />
+          <zeebe:output source="= body.creditAssessmentRemarks" target="creditAssessmentRemarks" />
+          <zeebe:output source="= body" target="creditApiResponse" />
         </zeebe:ioMapping>
+        <zeebe:taskHeaders>
+          <zeebe:header key="resultVariable" value="creditApiResponse" />
+          <zeebe:header key="resultExpression" value="={creditScore: response.body.creditScore, riskScore: response.body.riskScore, creditAssessmentRemarks: response.body.creditAssessmentRemarks}" />
+        </zeebe:taskHeaders>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_ValidationPassed</bpmn:incoming>
       <bpmn:outgoing>Flow_ToEvaluateLoanDMN</bpmn:outgoing>
@@ -78,7 +95,7 @@
 
     <bpmn:sequenceFlow id="Flow_ToEvaluateLoanDMN" sourceRef="Activity_CreditAssessmentREST" targetRef="Activity_EvaluateLoanDMN" />
 
-    <!-- Business Rule Task: DMN Decision Table -->
+    <!-- Business Rule Task: DMN Decision Table (Requirement 2) -->
     <bpmn:businessRuleTask id="Activity_EvaluateLoanDMN" name="Evaluate Loan Decision Table">
       <bpmn:extensionElements>
         <zeebe:calledDecision decisionId="decision_loan_approval" resultVariable="loanDecisionResult" />
@@ -112,7 +129,7 @@
 
     <bpmn:sequenceFlow id="Flow_ManualReview" name="decision == &#34;Manual Review&#34;" sourceRef="Gateway_LoanDecision" targetRef="Activity_ManualLoanReview" />
 
-    <!-- User Task: Tasklist Manual Review -->
+    <!-- User Task: Tasklist Manual Review (Requirement 7) -->
     <bpmn:userTask id="Activity_ManualLoanReview" name="Manual Loan Review by Underwriter">
       <bpmn:extensionElements>
         <zeebe:assignmentDefinition candidateGroups="loan-underwriters" />
@@ -145,10 +162,23 @@
 
     <bpmn:sequenceFlow id="Flow_ReviewRejected" name="Underwriter Rejected" sourceRef="Gateway_ManualReviewOutcome" targetRef="Activity_NotifyRejected" />
 
-    <!-- Approved Path: Disburse Loan -->
-    <bpmn:serviceTask id="Activity_DisburseLoan" name="Disburse Loan Funds">
+    <!-- REST Outbound Connector: Disburse Loan Funds -->
+    <bpmn:serviceTask id="Activity_DisburseLoan" name="Disburse Loan Funds (REST Connector)" zeebe:modelerTemplate="io.camunda.connectors.HttpJson.v2" zeebe:modelerTemplateVersion="13">
       <bpmn:extensionElements>
-        <zeebe:taskDefinition type="loan-disbursement-service" retries="3" />
+        <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
+        <zeebe:ioMapping>
+          <zeebe:input source="http://localhost:8080/api/loan/disburse" target="url" />
+          <zeebe:input source="post" target="method" />
+          <zeebe:input source="noAuth" target="authentication.type" />
+          <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
+          <zeebe:input source="={applicantId: applicantId, amount: requestedAmount, interestRate: interestRate}" target="body" />
+          <zeebe:output source="= body.disbursementStatus" target="disbursementStatus" />
+          <zeebe:output source="= body.disbursementRef" target="disbursementRef" />
+        </zeebe:ioMapping>
+        <zeebe:taskHeaders>
+          <zeebe:header key="resultVariable" value="disbursementResponse" />
+        </zeebe:taskHeaders>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_Approved</bpmn:incoming>
       <bpmn:incoming>Flow_ReviewApproved</bpmn:incoming>
@@ -160,10 +190,22 @@
       <bpmn:incoming>Flow_ToEndApproved</bpmn:incoming>
     </bpmn:endEvent>
 
-    <!-- Rejected Path: Send Notification -->
-    <bpmn:serviceTask id="Activity_NotifyRejected" name="Send Loan Rejection Notice">
+    <!-- REST Outbound Connector: Send Loan Rejection Notice -->
+    <bpmn:serviceTask id="Activity_NotifyRejected" name="Send Loan Rejection Notice (REST Connector)" zeebe:modelerTemplate="io.camunda.connectors.HttpJson.v2" zeebe:modelerTemplateVersion="13">
       <bpmn:extensionElements>
-        <zeebe:taskDefinition type="notification-service" retries="3" />
+        <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
+        <zeebe:ioMapping>
+          <zeebe:input source="http://localhost:8080/api/notifications/send" target="url" />
+          <zeebe:input source="post" target="method" />
+          <zeebe:input source="noAuth" target="authentication.type" />
+          <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
+          <zeebe:input source="={applicantId: applicantId, notificationType: &#34;LOAN_REJECTED&#34;, reason: decisionReason}" target="body" />
+          <zeebe:output source="= body.notificationSent" target="notificationSent" />
+        </zeebe:ioMapping>
+        <zeebe:taskHeaders>
+          <zeebe:header key="resultVariable" value="notificationResponse" />
+        </zeebe:taskHeaders>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_Rejected</bpmn:incoming>
       <bpmn:incoming>Flow_ReviewRejected</bpmn:incoming>

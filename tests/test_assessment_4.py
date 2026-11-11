@@ -2,9 +2,10 @@
 Automated Verification Suite for Assessment 4 (PBJ-2 Practical Assignment: Labs 1-3)
 Validates:
 1. BPMN 2.0 XML structure, Camunda 8 Zeebe extensions, and FEEL expressions.
-2. DMN 1.3 XML decision tables, Hit Policies, and rule consistency.
-3. Simulation and evaluation of all DMN rules across Labs 1, 2, and 3.
-4. Validation of 15 synthetic test payload files across all 3 Labs.
+2. Camunda 8 REST Outbound Connector element templates (io.camunda.connectors.HttpJson.v2).
+3. DMN 1.3 XML decision tables, Hit Policies, and rule consistency.
+4. Simulation and evaluation of all DMN rules across Labs 1, 2, and 3.
+5. Validation of 15 synthetic test payload files across all 3 Labs.
 """
 
 import json
@@ -49,15 +50,15 @@ class TestAssessment4ModelsAndRules(unittest.TestCase):
             tree = ET.parse(f)
             self.assertIsNotNone(tree.getroot(), f"Failed to parse root element for {f}")
 
-    def test_bpmn_camunda8_extensions(self):
-        """Verify BPMN models contain proper Zeebe task definitions, gateways, and FEEL expressions."""
+    def test_bpmn_camunda8_extensions_and_rest_connectors(self):
+        """Verify BPMN models contain proper Zeebe task definitions, gateways, FEEL expressions, and REST Connectors."""
         bpmn_files = [
-            (LAB1_BPMN, "Process_LoanApprovalAutomation"),
-            (LAB2_BPMN, "Process_EcommerceOrderProcessing"),
-            (LAB3_BPMN, "Process_HospitalPatientTriage")
+            (LAB1_BPMN, "Process_LoanApprovalAutomation", 4),
+            (LAB2_BPMN, "Process_EcommerceOrderProcessing", 5),
+            (LAB3_BPMN, "Process_HospitalPatientTriage", 3)
         ]
 
-        for path, expected_process_id in bpmn_files:
+        for path, expected_process_id, min_rest_connectors in bpmn_files:
             tree = ET.parse(path)
             root = tree.getroot()
             process = root.find(f".//bpmn:process[@id='{expected_process_id}']", NS_BPMN)
@@ -73,6 +74,20 @@ class TestAssessment4ModelsAndRules(unittest.TestCase):
             for cond in conditions:
                 text = cond.text.strip() if cond.text else ""
                 self.assertTrue(text.startswith("="), f"Condition in {path} does not use FEEL '=' prefix: {text}")
+
+            # Verify REST Outbound Connectors use official Camunda 8 connector template
+            service_tasks = process.findall(".//bpmn:serviceTask", NS_BPMN)
+            connectors = [
+                task for task in service_tasks
+                if task.attrib.get("{http://camunda.org/schema/zeebe/1.0}modelerTemplate") == "io.camunda.connectors.HttpJson.v2"
+            ]
+            self.assertGreaterEqual(len(connectors), min_rest_connectors,
+                                    f"Expected at least {min_rest_connectors} REST Connectors in {path}, found {len(connectors)}")
+
+            for conn in connectors:
+                task_def = conn.find(".//zeebe:taskDefinition", NS_BPMN)
+                self.assertIsNotNone(task_def, f"Connector {conn.attrib.get('id')} missing taskDefinition")
+                self.assertEqual(task_def.attrib.get("type"), "io.camunda:http-json:1")
 
     def test_dmn_decision_tables_integrity(self):
         """Verify DMN models have UNIQUE hit policy, defined inputs, outputs, and rules."""

@@ -7,7 +7,7 @@
       <bpmn:outgoing>Flow_ToValidateRegistration</bpmn:outgoing>
     </bpmn:startEvent>
 
-    <!-- Java Spring Boot Worker: Validate Registration -->
+    <!-- Java Spring Boot Worker: Validate Registration (Requirement 3) -->
     <bpmn:serviceTask id="Activity_ValidatePatientRegistration" name="Validate Patient Registration">
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="validate-patient-registration" retries="3" />
@@ -47,10 +47,22 @@
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= registrationValid = false</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
 
-    <!-- Invalid Registration Path -->
-    <bpmn:serviceTask id="Activity_NotifyRegistrationError" name="Notify Registration Error">
+    <!-- REST Outbound Connector: Registration Error Notification -->
+    <bpmn:serviceTask id="Activity_NotifyRegistrationError" name="Notify Registration Error (REST Connector)" zeebe:modelerTemplate="io.camunda.connectors.HttpJson.v2" zeebe:modelerTemplateVersion="13">
       <bpmn:extensionElements>
-        <zeebe:taskDefinition type="notification-service" retries="3" />
+        <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
+        <zeebe:ioMapping>
+          <zeebe:input source="http://localhost:8080/api/notifications/send" target="url" />
+          <zeebe:input source="post" target="method" />
+          <zeebe:input source="noAuth" target="authentication.type" />
+          <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
+          <zeebe:input source="={patientReference: patientReference, notificationType: &#34;REGISTRATION_ERROR&#34;, notes: validationNotes}" target="body" />
+          <zeebe:output source="= body.notificationSent" target="notificationSent" />
+        </zeebe:ioMapping>
+        <zeebe:taskHeaders>
+          <zeebe:header key="resultVariable" value="regErrorNoticeResponse" />
+        </zeebe:taskHeaders>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_RegistrationInvalid</bpmn:incoming>
       <bpmn:outgoing>Flow_ToEndRegistrationInvalid</bpmn:outgoing>
@@ -61,7 +73,7 @@
       <bpmn:incoming>Flow_ToEndRegistrationInvalid</bpmn:incoming>
     </bpmn:endEvent>
 
-    <!-- Business Rule Task: Triage DMN -->
+    <!-- Business Rule Task: Triage DMN (Requirement 2) -->
     <bpmn:businessRuleTask id="Activity_ClassifyTriageDMN" name="Classify Patient Triage Table">
       <bpmn:extensionElements>
         <zeebe:calledDecision decisionId="decision_patient_triage" resultVariable="triageDecisionResult" />
@@ -90,6 +102,7 @@
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= triageCategory = "Urgent Assessment"</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
 
+    <!-- Tasklist User Task: Immediate Emergency Assessment (Requirement 7) -->
     <bpmn:userTask id="Activity_UrgentClinicalAssessment" name="Immediate Emergency Clinical Assessment">
       <bpmn:extensionElements>
         <zeebe:assignmentDefinition candidateGroups="emergency-clinical-staff" />
@@ -115,6 +128,7 @@
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= triageCategory = "Priority Review"</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
 
+    <!-- Tasklist User Task: Priority Review (Requirement 7) -->
     <bpmn:userTask id="Activity_PriorityStaffReview" name="Authorised Staff Priority Review">
       <bpmn:extensionElements>
         <zeebe:assignmentDefinition candidateGroups="triage-nursing-officers" />
@@ -135,23 +149,27 @@
     <!-- Routine Branch -->
     <bpmn:sequenceFlow id="Flow_RoutineTriage" name="Routine Outpatient" sourceRef="Gateway_TriageBranching" targetRef="Activity_QueryAppointmentSlotsREST" />
 
-    <!-- REST Connector: Mock Hospital Scheduling API -->
-    <bpmn:serviceTask id="Activity_QueryAppointmentSlotsREST" name="Query Appointment Slots REST Connector">
+    <!-- REST Outbound Connector: Mock Hospital Scheduling API (Requirement 4) -->
+    <bpmn:serviceTask id="Activity_QueryAppointmentSlotsREST" name="Query Appointment Slots REST Connector" zeebe:modelerTemplate="io.camunda.connectors.HttpJson.v2" zeebe:modelerTemplateVersion="13">
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
-        <zeebe:taskHeaders>
-          <zeebe:header key="resultVariable" value="schedulingApiResponse" />
-        </zeebe:taskHeaders>
         <zeebe:ioMapping>
-          <zeebe:input source="POST" target="method" />
           <zeebe:input source="http://localhost:8080/api/hospital/scheduling/available-slots" target="url" />
+          <zeebe:input source="post" target="method" />
+          <zeebe:input source="noAuth" target="authentication.type" />
+          <zeebe:input source="20" target="connectionTimeoutInSeconds" />
           <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
           <zeebe:input source="={patientReference: patientReference, department: normalizedDepartment}" target="body" />
-          <zeebe:output source="= schedulingApiResponse.slotsAvailable" target="slotsAvailable" />
-          <zeebe:output source="= schedulingApiResponse.slotId" target="slotId" />
-          <zeebe:output source="= schedulingApiResponse.slotTime" target="slotTime" />
-          <zeebe:output source="= schedulingApiResponse.availableCount" target="availableCount" />
+          <zeebe:output source="= body.slotsAvailable" target="slotsAvailable" />
+          <zeebe:output source="= body.slotId" target="slotId" />
+          <zeebe:output source="= body.slotTime" target="slotTime" />
+          <zeebe:output source="= body.availableCount" target="availableCount" />
+          <zeebe:output source="= body" target="schedulingApiResponse" />
         </zeebe:ioMapping>
+        <zeebe:taskHeaders>
+          <zeebe:header key="resultVariable" value="schedulingApiResponse" />
+          <zeebe:header key="resultExpression" value="={slotsAvailable: response.body.slotsAvailable, slotId: response.body.slotId, slotTime: response.body.slotTime, availableCount: response.body.availableCount}" />
+        </zeebe:taskHeaders>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_RoutineTriage</bpmn:incoming>
       <bpmn:incoming>Flow_ToQuerySlotsAfterReview</bpmn:incoming>
@@ -173,10 +191,23 @@
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= slotsAvailable = false</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
 
-    <!-- Slot Available Path -->
-    <bpmn:serviceTask id="Activity_ConfirmBooking" name="Confirm Appointment Booking">
+    <!-- REST Outbound Connector: Confirm Appointment Booking -->
+    <bpmn:serviceTask id="Activity_ConfirmBooking" name="Confirm Appointment Booking (REST Connector)" zeebe:modelerTemplate="io.camunda.connectors.HttpJson.v2" zeebe:modelerTemplateVersion="13">
       <bpmn:extensionElements>
-        <zeebe:taskDefinition type="booking-confirmation-service" retries="3" />
+        <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
+        <zeebe:ioMapping>
+          <zeebe:input source="http://localhost:8080/api/hospital/scheduling/confirm-booking" target="url" />
+          <zeebe:input source="post" target="method" />
+          <zeebe:input source="noAuth" target="authentication.type" />
+          <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
+          <zeebe:input source="={patientReference: patientReference, slotId: slotId, department: normalizedDepartment}" target="body" />
+          <zeebe:output source="= body.bookingStatus" target="bookingStatus" />
+          <zeebe:output source="= body.bookingConfirmationCode" target="bookingConfirmationCode" />
+        </zeebe:ioMapping>
+        <zeebe:taskHeaders>
+          <zeebe:header key="resultVariable" value="confirmBookingResponse" />
+        </zeebe:taskHeaders>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_SlotFound</bpmn:incoming>
       <bpmn:outgoing>Flow_ToEndBookingConfirmed</bpmn:outgoing>
@@ -187,7 +218,7 @@
       <bpmn:incoming>Flow_ToEndBookingConfirmed</bpmn:incoming>
     </bpmn:endEvent>
 
-    <!-- No Slots Path: User Task for Manual Waitlist/Scheduling -->
+    <!-- Tasklist User Task: Manual Waitlist/Scheduling (Requirement 7) -->
     <bpmn:userTask id="Activity_ManualStaffScheduling" name="Authorised Staff Review / Manual Scheduling">
       <bpmn:extensionElements>
         <zeebe:assignmentDefinition candidateGroups="hospital-registrars" />

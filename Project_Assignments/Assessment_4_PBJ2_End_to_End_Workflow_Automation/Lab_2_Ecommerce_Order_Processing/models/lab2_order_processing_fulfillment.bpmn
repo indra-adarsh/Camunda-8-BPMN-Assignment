@@ -7,7 +7,7 @@
       <bpmn:outgoing>Flow_ToValidateOrder</bpmn:outgoing>
     </bpmn:startEvent>
 
-    <!-- Java Spring Boot Job Worker: Validation & Inventory Check -->
+    <!-- Java Spring Boot Job Worker: Validation & Inventory Check (Requirement 3) -->
     <bpmn:serviceTask id="Activity_ValidateAndCheckInventory" name="Validate Order &amp; Check Inventory">
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="validate-order-inventory" retries="3" />
@@ -45,10 +45,22 @@
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= stockStatus = "OUT_OF_STOCK"</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
 
-    <!-- Out of Stock Path -->
-    <bpmn:serviceTask id="Activity_NotifyOutOfStock" name="Notify Insufficient Stock">
+    <!-- REST Outbound Connector: Out of Stock Notification -->
+    <bpmn:serviceTask id="Activity_NotifyOutOfStock" name="Notify Insufficient Stock (REST Connector)" zeebe:modelerTemplate="io.camunda.connectors.HttpJson.v2" zeebe:modelerTemplateVersion="13">
       <bpmn:extensionElements>
-        <zeebe:taskDefinition type="notification-service" retries="3" />
+        <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
+        <zeebe:ioMapping>
+          <zeebe:input source="http://localhost:8080/api/notifications/send" target="url" />
+          <zeebe:input source="post" target="method" />
+          <zeebe:input source="noAuth" target="authentication.type" />
+          <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
+          <zeebe:input source="={orderId: orderId, notificationType: &#34;OUT_OF_STOCK&#34;, message: &#34;Requested inventory unavailable&#34;}" target="body" />
+          <zeebe:output source="= body.notificationSent" target="notificationSent" />
+        </zeebe:ioMapping>
+        <zeebe:taskHeaders>
+          <zeebe:header key="resultVariable" value="outOfStockNoticeResponse" />
+        </zeebe:taskHeaders>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_OutOfStock</bpmn:incoming>
       <bpmn:outgoing>Flow_ToEndOutOfStock</bpmn:outgoing>
@@ -59,7 +71,7 @@
       <bpmn:incoming>Flow_ToEndOutOfStock</bpmn:incoming>
     </bpmn:endEvent>
 
-    <!-- Business Rule Task: Priority DMN -->
+    <!-- Business Rule Task: Priority DMN (Requirement 2) -->
     <bpmn:businessRuleTask id="Activity_DeterminePriorityDMN" name="Determine Order Priority Table">
       <bpmn:extensionElements>
         <zeebe:calledDecision decisionId="decision_order_priority" resultVariable="priorityResult" />
@@ -89,7 +101,7 @@
 
     <bpmn:sequenceFlow id="Flow_SkipReview" name="Auto-Proceed" sourceRef="Gateway_ManualReviewCheck" targetRef="Activity_ProcessPaymentREST" />
 
-    <!-- Tasklist User Task: Manual Order Verification -->
+    <!-- Tasklist User Task: Manual Order Verification (Requirement 7) -->
     <bpmn:userTask id="Activity_ManualOrderVerification" name="Manual Order Verification">
       <bpmn:extensionElements>
         <zeebe:assignmentDefinition candidateGroups="order-managers" />
@@ -120,10 +132,22 @@
 
     <bpmn:sequenceFlow id="Flow_ReviewRejected" name="Review Rejected" sourceRef="Gateway_ReviewOutcome" targetRef="Activity_NotifyOrderRejected" />
 
-    <!-- Order Rejected by Review -->
-    <bpmn:serviceTask id="Activity_NotifyOrderRejected" name="Notify Order Cancellation">
+    <!-- REST Outbound Connector: Order Rejected by Review -->
+    <bpmn:serviceTask id="Activity_NotifyOrderRejected" name="Notify Order Cancellation (REST Connector)" zeebe:modelerTemplate="io.camunda.connectors.HttpJson.v2" zeebe:modelerTemplateVersion="13">
       <bpmn:extensionElements>
-        <zeebe:taskDefinition type="notification-service" retries="3" />
+        <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
+        <zeebe:ioMapping>
+          <zeebe:input source="http://localhost:8080/api/notifications/send" target="url" />
+          <zeebe:input source="post" target="method" />
+          <zeebe:input source="noAuth" target="authentication.type" />
+          <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
+          <zeebe:input source="={orderId: orderId, notificationType: &#34;ORDER_REJECTED_MANUAL_REVIEW&#34;, notes: reviewRemarks}" target="body" />
+          <zeebe:output source="= body.notificationSent" target="notificationSent" />
+        </zeebe:ioMapping>
+        <zeebe:taskHeaders>
+          <zeebe:header key="resultVariable" value="rejectNoticeResponse" />
+        </zeebe:taskHeaders>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_ReviewRejected</bpmn:incoming>
       <bpmn:outgoing>Flow_ToEndReviewRejected</bpmn:outgoing>
@@ -134,22 +158,26 @@
       <bpmn:incoming>Flow_ToEndReviewRejected</bpmn:incoming>
     </bpmn:endEvent>
 
-    <!-- REST Connector: Mock Payment Gateway API -->
-    <bpmn:serviceTask id="Activity_ProcessPaymentREST" name="Payment Gateway REST Connector">
+    <!-- REST Outbound Connector: Payment Gateway API (Requirement 4) -->
+    <bpmn:serviceTask id="Activity_ProcessPaymentREST" name="Payment Gateway REST Connector" zeebe:modelerTemplate="io.camunda.connectors.HttpJson.v2" zeebe:modelerTemplateVersion="13">
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
-        <zeebe:taskHeaders>
-          <zeebe:header key="resultVariable" value="paymentApiResponse" />
-        </zeebe:taskHeaders>
         <zeebe:ioMapping>
-          <zeebe:input source="POST" target="method" />
           <zeebe:input source="http://localhost:8080/api/payment/process" target="url" />
+          <zeebe:input source="post" target="method" />
+          <zeebe:input source="noAuth" target="authentication.type" />
+          <zeebe:input source="20" target="connectionTimeoutInSeconds" />
           <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
           <zeebe:input source="={orderId: orderId, orderTotal: orderTotal, paymentToken: paymentToken}" target="body" />
-          <zeebe:output source="= paymentApiResponse.paymentStatus" target="paymentStatus" />
-          <zeebe:output source="= paymentApiResponse.transactionId" target="transactionId" />
-          <zeebe:output source="= paymentApiResponse.paymentMessage" target="paymentMessage" />
+          <zeebe:output source="= body.paymentStatus" target="paymentStatus" />
+          <zeebe:output source="= body.transactionId" target="transactionId" />
+          <zeebe:output source="= body.paymentMessage" target="paymentMessage" />
+          <zeebe:output source="= body" target="paymentApiResponse" />
         </zeebe:ioMapping>
+        <zeebe:taskHeaders>
+          <zeebe:header key="resultVariable" value="paymentApiResponse" />
+          <zeebe:header key="resultExpression" value="={paymentStatus: response.body.paymentStatus, transactionId: response.body.transactionId, paymentMessage: response.body.paymentMessage}" />
+        </zeebe:taskHeaders>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_SkipReview</bpmn:incoming>
       <bpmn:incoming>Flow_ReviewPassed</bpmn:incoming>
@@ -171,10 +199,22 @@
       <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">= paymentStatus = "DECLINED"</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
 
-    <!-- Payment Declined Path -->
-    <bpmn:serviceTask id="Activity_NotifyPaymentDeclined" name="Notify Payment Declined">
+    <!-- REST Outbound Connector: Payment Declined Notification -->
+    <bpmn:serviceTask id="Activity_NotifyPaymentDeclined" name="Notify Payment Declined (REST Connector)" zeebe:modelerTemplate="io.camunda.connectors.HttpJson.v2" zeebe:modelerTemplateVersion="13">
       <bpmn:extensionElements>
-        <zeebe:taskDefinition type="notification-service" retries="3" />
+        <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
+        <zeebe:ioMapping>
+          <zeebe:input source="http://localhost:8080/api/notifications/send" target="url" />
+          <zeebe:input source="post" target="method" />
+          <zeebe:input source="noAuth" target="authentication.type" />
+          <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
+          <zeebe:input source="={orderId: orderId, notificationType: &#34;PAYMENT_DECLINED&#34;, message: paymentMessage}" target="body" />
+          <zeebe:output source="= body.notificationSent" target="notificationSent" />
+        </zeebe:ioMapping>
+        <zeebe:taskHeaders>
+          <zeebe:header key="resultVariable" value="paymentDeclineNoticeResponse" />
+        </zeebe:taskHeaders>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_PaymentDeclined</bpmn:incoming>
       <bpmn:outgoing>Flow_ToEndPaymentDeclined</bpmn:outgoing>
@@ -185,10 +225,23 @@
       <bpmn:incoming>Flow_ToEndPaymentDeclined</bpmn:incoming>
     </bpmn:endEvent>
 
-    <!-- Fulfillment Path -->
-    <bpmn:serviceTask id="Activity_FulfillAndDispatch" name="Fulfill and Dispatch Order">
+    <!-- REST Outbound Connector: Fulfillment and Dispatch -->
+    <bpmn:serviceTask id="Activity_FulfillAndDispatch" name="Fulfill and Dispatch Order (REST Connector)" zeebe:modelerTemplate="io.camunda.connectors.HttpJson.v2" zeebe:modelerTemplateVersion="13">
       <bpmn:extensionElements>
-        <zeebe:taskDefinition type="fulfillment-service" retries="3" />
+        <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
+        <zeebe:ioMapping>
+          <zeebe:input source="http://localhost:8080/api/order/fulfill" target="url" />
+          <zeebe:input source="post" target="method" />
+          <zeebe:input source="noAuth" target="authentication.type" />
+          <zeebe:input source="20" target="connectionTimeoutInSeconds" />
+          <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
+          <zeebe:input source="={orderId: orderId, customerReference: customerReference, orderTotal: orderTotal, priority: orderPriority}" target="body" />
+          <zeebe:output source="= body.fulfillmentStatus" target="fulfillmentStatus" />
+          <zeebe:output source="= body.trackingNumber" target="trackingNumber" />
+        </zeebe:ioMapping>
+        <zeebe:taskHeaders>
+          <zeebe:header key="resultVariable" value="fulfillmentResponse" />
+        </zeebe:taskHeaders>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_PaymentSuccess</bpmn:incoming>
       <bpmn:outgoing>Flow_ToEndOrderFulfilled</bpmn:outgoing>
