@@ -12,20 +12,21 @@
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
         <zeebe:ioMapping>
-          <zeebe:input source="http://localhost:8080/api/patient/validate" target="url" />
+          <zeebe:input source="http://localhost:8088/api/patient/validate" target="url" />
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
           <zeebe:input source="20" target="readTimeoutInSeconds" />
           <zeebe:input source="={&quot;Content-Type&quot;: &quot;application/json&quot;}" target="headers" />
           <zeebe:input source="={patientReference: patientReference, patientName: patientName, age: age, appointmentPreference: appointmentPreference, symptomsSummary: symptomsSummary, hasChestPain: hasChestPain, hasBreathingDifficulty: hasBreathingDifficulty, painScale: painScale, feverTemperature: feverTemperature, simulateWorkerFailure: simulateWorkerFailure}" target="body" />
-          <zeebe:output source="= body.registrationValid" target="registrationValid" />
-          <zeebe:output source="= body.normalizedDepartment" target="normalizedDepartment" />
-          <zeebe:output source="= body.urgencyScore" target="urgencyScore" />
-          <zeebe:output source="= body.validationNotes" target="validationNotes" />
+          <zeebe:output source="= patientValidationResponse.body.registrationValid" target="registrationValid" />
+          <zeebe:output source="= patientValidationResponse.body.normalizedDepartment" target="normalizedDepartment" />
+          <zeebe:output source="= patientValidationResponse.body.urgencyScore" target="urgencyScore" />
+          <zeebe:output source="= patientValidationResponse.body.validationNotes" target="validationNotes" />
         </zeebe:ioMapping>
         <zeebe:taskHeaders>
           <zeebe:header key="resultVariable" value="patientValidationResponse" />
+          <zeebe:header key="resultExpression" value="={registrationValid: response.body.registrationValid, normalizedDepartment: response.body.normalizedDepartment, urgencyScore: response.body.urgencyScore, validationNotes: response.body.validationNotes}" />
         </zeebe:taskHeaders>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_ToValidateRegistration</bpmn:incoming>
@@ -53,7 +54,7 @@
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
         <zeebe:ioMapping>
-          <zeebe:input source="http://localhost:8080/api/notifications/send" target="url" />
+          <zeebe:input source="http://localhost:8088/api/notifications/send" target="url" />
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
@@ -156,17 +157,17 @@
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
         <zeebe:ioMapping>
-          <zeebe:input source="http://localhost:8080/api/hospital/scheduling/available-slots" target="url" />
+          <zeebe:input source="http://localhost:8088/api/hospital/scheduling/available-slots" target="url" />
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
           <zeebe:input source="20" target="readTimeoutInSeconds" />
           <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
           <zeebe:input source="={patientReference: patientReference, department: normalizedDepartment}" target="body" />
-          <zeebe:output source="= body.slotsAvailable" target="slotsAvailable" />
-          <zeebe:output source="= body.slotId" target="slotId" />
-          <zeebe:output source="= body.slotTime" target="slotTime" />
-          <zeebe:output source="= body.availableCount" target="availableCount" />
+          <zeebe:output source="= schedulingApiResponse.body.slotsAvailable" target="slotsAvailable" />
+          <zeebe:output source="= schedulingApiResponse.body.slotId" target="slotId" />
+          <zeebe:output source="= schedulingApiResponse.body.slotTime" target="slotTime" />
+          <zeebe:output source="= schedulingApiResponse.body.availableCount" target="availableCount" />
           <zeebe:output source="= body" target="schedulingApiResponse" />
         </zeebe:ioMapping>
         <zeebe:taskHeaders>
@@ -199,18 +200,19 @@
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
         <zeebe:ioMapping>
-          <zeebe:input source="http://localhost:8080/api/hospital/scheduling/confirm-booking" target="url" />
+          <zeebe:input source="http://localhost:8088/api/hospital/scheduling/confirm-booking" target="url" />
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
           <zeebe:input source="20" target="readTimeoutInSeconds" />
           <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
           <zeebe:input source="={patientReference: patientReference, slotId: slotId, department: normalizedDepartment}" target="body" />
-          <zeebe:output source="= body.bookingStatus" target="bookingStatus" />
-          <zeebe:output source="= body.bookingConfirmationCode" target="bookingConfirmationCode" />
+          <zeebe:output source="= confirmBookingResponse.body.bookingStatus" target="bookingStatus" />
+          <zeebe:output source="= confirmBookingResponse.body.bookingConfirmationCode" target="bookingConfirmationCode" />
         </zeebe:ioMapping>
         <zeebe:taskHeaders>
           <zeebe:header key="resultVariable" value="confirmBookingResponse" />
+          <zeebe:header key="resultExpression" value="={bookingStatus: response.body.bookingStatus, bookingConfirmationCode: response.body.bookingConfirmationCode}" />
         </zeebe:taskHeaders>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_SlotFound</bpmn:incoming>

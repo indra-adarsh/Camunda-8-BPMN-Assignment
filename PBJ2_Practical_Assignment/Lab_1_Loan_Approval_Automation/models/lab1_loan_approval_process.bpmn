@@ -12,16 +12,16 @@
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
         <zeebe:ioMapping>
-          <zeebe:input source="http://localhost:8080/api/applicant/validate" target="url" />
+          <zeebe:input source="http://localhost:8088/api/applicant/validate" target="url" />
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
           <zeebe:input source="20" target="readTimeoutInSeconds" />
           <zeebe:input source="={&quot;Content-Type&quot;: &quot;application/json&quot;}" target="headers" />
           <zeebe:input source="={applicantId: applicantId, applicantName: applicantName, requestedAmount: requestedAmount, monthlyIncome: monthlyIncome, existingMonthlyDebt: existingMonthlyDebt, simulateWorkerFailure: simulateWorkerFailure}" target="body" />
-          <zeebe:output source="= body.applicantValid" target="applicantValid" />
-          <zeebe:output source="= body.debtToIncomeRatio" target="debtToIncomeRatio" />
-          <zeebe:output source="= body.validationNotes" target="validationNotes" />
+          <zeebe:output source="= applicantValidationResponse.body.applicantValid" target="applicantValid" />
+          <zeebe:output source="= applicantValidationResponse.body.debtToIncomeRatio" target="debtToIncomeRatio" />
+          <zeebe:output source="= applicantValidationResponse.body.validationNotes" target="validationNotes" />
         </zeebe:ioMapping>
         <zeebe:taskHeaders>
           <zeebe:header key="resultVariable" value="applicantValidationResponse" />
@@ -52,7 +52,7 @@
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
         <zeebe:ioMapping>
-          <zeebe:input source="http://localhost:8080/api/notifications/send" target="url" />
+          <zeebe:input source="http://localhost:8088/api/notifications/send" target="url" />
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
@@ -79,16 +79,16 @@
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
         <zeebe:ioMapping>
-          <zeebe:input source="http://localhost:8080/api/credit/assess" target="url" />
+          <zeebe:input source="http://localhost:8088/api/credit/assess" target="url" />
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
           <zeebe:input source="20" target="readTimeoutInSeconds" />
           <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
           <zeebe:input source="={applicantId: applicantId, requestedAmount: requestedAmount, monthlyIncome: monthlyIncome}" target="body" />
-          <zeebe:output source="= body.creditScore" target="creditScore" />
-          <zeebe:output source="= body.riskScore" target="riskScore" />
-          <zeebe:output source="= body.creditAssessmentRemarks" target="creditAssessmentRemarks" />
+          <zeebe:output source="= creditApiResponse.body.creditScore" target="creditScore" />
+          <zeebe:output source="= creditApiResponse.body.riskScore" target="riskScore" />
+          <zeebe:output source="= creditApiResponse.body.creditAssessmentRemarks" target="creditAssessmentRemarks" />
           <zeebe:output source="= body" target="creditApiResponse" />
         </zeebe:ioMapping>
         <zeebe:taskHeaders>
@@ -174,15 +174,15 @@
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
         <zeebe:ioMapping>
-          <zeebe:input source="http://localhost:8080/api/loan/disburse" target="url" />
+          <zeebe:input source="http://localhost:8088/api/loan/disburse" target="url" />
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
           <zeebe:input source="20" target="readTimeoutInSeconds" />
           <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
           <zeebe:input source="={applicantId: applicantId, amount: requestedAmount, interestRate: interestRate}" target="body" />
-          <zeebe:output source="= body.disbursementStatus" target="disbursementStatus" />
-          <zeebe:output source="= body.disbursementRef" target="disbursementRef" />
+          <zeebe:output source="= disbursementResponse.body.disbursementStatus" target="disbursementStatus" />
+          <zeebe:output source="= disbursementResponse.body.disbursementRef" target="disbursementRef" />
         </zeebe:ioMapping>
         <zeebe:taskHeaders>
           <zeebe:header key="resultVariable" value="disbursementResponse" />
@@ -203,7 +203,7 @@
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
         <zeebe:ioMapping>
-          <zeebe:input source="http://localhost:8080/api/notifications/send" target="url" />
+          <zeebe:input source="http://localhost:8088/api/notifications/send" target="url" />
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />

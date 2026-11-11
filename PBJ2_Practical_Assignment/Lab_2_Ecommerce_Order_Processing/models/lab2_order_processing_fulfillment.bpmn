@@ -12,17 +12,17 @@
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
         <zeebe:ioMapping>
-          <zeebe:input source="http://localhost:8080/api/order/validate" target="url" />
+          <zeebe:input source="http://localhost:8088/api/order/validate" target="url" />
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
           <zeebe:input source="20" target="readTimeoutInSeconds" />
           <zeebe:input source="={&quot;Content-Type&quot;: &quot;application/json&quot;}" target="headers" />
           <zeebe:input source="={orderId: orderId, customerReference: customerReference, customerCategory: customerCategory, productId: productId, quantity: quantity, unitPrice: unitPrice, deliveryPreference: deliveryPreference, simulateWorkerFailure: simulateWorkerFailure}" target="body" />
-          <zeebe:output source="= body.orderValid" target="orderValid" />
-          <zeebe:output source="= body.stockStatus" target="stockStatus" />
-          <zeebe:output source="= body.availableStock" target="availableStock" />
-          <zeebe:output source="= body.orderTotal" target="orderTotal" />
+          <zeebe:output source="= orderValidationResponse.body.orderValid" target="orderValid" />
+          <zeebe:output source="= orderValidationResponse.body.stockStatus" target="stockStatus" />
+          <zeebe:output source="= orderValidationResponse.body.availableStock" target="availableStock" />
+          <zeebe:output source="= orderValidationResponse.body.orderTotal" target="orderTotal" />
         </zeebe:ioMapping>
         <zeebe:taskHeaders>
           <zeebe:header key="resultVariable" value="orderValidationResponse" />
@@ -53,7 +53,7 @@
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
         <zeebe:ioMapping>
-          <zeebe:input source="http://localhost:8080/api/notifications/send" target="url" />
+          <zeebe:input source="http://localhost:8088/api/notifications/send" target="url" />
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
@@ -141,7 +141,7 @@
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
         <zeebe:ioMapping>
-          <zeebe:input source="http://localhost:8080/api/notifications/send" target="url" />
+          <zeebe:input source="http://localhost:8088/api/notifications/send" target="url" />
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
@@ -168,16 +168,16 @@
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
         <zeebe:ioMapping>
-          <zeebe:input source="http://localhost:8080/api/payment/process" target="url" />
+          <zeebe:input source="http://localhost:8088/api/payment/process" target="url" />
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
           <zeebe:input source="20" target="readTimeoutInSeconds" />
           <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
           <zeebe:input source="={orderId: orderId, orderTotal: orderTotal, paymentToken: paymentToken}" target="body" />
-          <zeebe:output source="= body.paymentStatus" target="paymentStatus" />
-          <zeebe:output source="= body.transactionId" target="transactionId" />
-          <zeebe:output source="= body.paymentMessage" target="paymentMessage" />
+          <zeebe:output source="= paymentApiResponse.body.paymentStatus" target="paymentStatus" />
+          <zeebe:output source="= paymentApiResponse.body.transactionId" target="transactionId" />
+          <zeebe:output source="= paymentApiResponse.body.paymentMessage" target="paymentMessage" />
           <zeebe:output source="= body" target="paymentApiResponse" />
         </zeebe:ioMapping>
         <zeebe:taskHeaders>
@@ -210,7 +210,7 @@
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
         <zeebe:ioMapping>
-          <zeebe:input source="http://localhost:8080/api/notifications/send" target="url" />
+          <zeebe:input source="http://localhost:8088/api/notifications/send" target="url" />
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
@@ -237,15 +237,15 @@
       <bpmn:extensionElements>
         <zeebe:taskDefinition type="io.camunda:http-json:1" retries="3" />
         <zeebe:ioMapping>
-          <zeebe:input source="http://localhost:8080/api/order/fulfill" target="url" />
+          <zeebe:input source="http://localhost:8088/api/order/fulfill" target="url" />
           <zeebe:input source="post" target="method" />
           <zeebe:input source="noAuth" target="authentication.type" />
           <zeebe:input source="20" target="connectionTimeoutInSeconds" />
           <zeebe:input source="20" target="readTimeoutInSeconds" />
           <zeebe:input source="={&#34;Content-Type&#34;: &#34;application/json&#34;}" target="headers" />
           <zeebe:input source="={orderId: orderId, customerReference: customerReference, orderTotal: orderTotal, priority: orderPriority}" target="body" />
-          <zeebe:output source="= body.fulfillmentStatus" target="fulfillmentStatus" />
-          <zeebe:output source="= body.trackingNumber" target="trackingNumber" />
+          <zeebe:output source="= fulfillmentResponse.body.fulfillmentStatus" target="fulfillmentStatus" />
+          <zeebe:output source="= fulfillmentResponse.body.trackingNumber" target="trackingNumber" />
         </zeebe:ioMapping>
         <zeebe:taskHeaders>
           <zeebe:header key="resultVariable" value="fulfillmentResponse" />
